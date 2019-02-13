@@ -2,7 +2,10 @@ package config
 
 import (
 	cfsslcfg "github.com/cloudflare/cfssl/config"
+	"github.com/hyperledger/fabric/bccsp/factory"
+	"github.com/pkg/errors"
 	"github.com/rkcloudchain/courier-ca/api"
+	"github.com/spf13/viper"
 )
 
 // ServerConfig is the courier-ca server's configuration
@@ -57,6 +60,8 @@ type CAConfig struct {
 	CSR          api.CSRInfo
 	Intermediate IntermediateCA
 	CRL          CRLConfig
+	CSP          *factory.FactoryOpts
+	Client       *ClientConfig
 }
 
 // CRLConfig contains configuration options used by the gencrl request handler
@@ -74,7 +79,6 @@ type ParentServer struct {
 type IntermediateCA struct {
 	ParentServer ParentServer
 	TLS          ClientTLSConfig
-	Enrollment   api.EnrollmentRequest
 }
 
 // CfgOptions is a CA configuration that allows for setting different options
@@ -87,4 +91,27 @@ type CAInfo struct {
 	Keyfile   string
 	Certfile  string
 	Chainfile string
+}
+
+// UnmarshalConfig unmarshals a configuration file
+func UnmarshalConfig(cfg interface{}, vp *viper.Viper, configFile string, server bool) error {
+	vp.SetConfigFile(configFile)
+	err := vp.ReadInConfig()
+	if err != nil {
+		return errors.Wrapf(err, "Failed to read config file '%s'", configFile)
+	}
+
+	err = vp.Unmarshal(cfg)
+	if err != nil {
+		return errors.Wrapf(err, "Incorrect format in file '%s'", configFile)
+	}
+
+	if server {
+		serverCfg := cfg.(*ServerConfig)
+		err = vp.Unmarshal(&serverCfg.CACfg)
+		if err != nil {
+			return errors.Wrapf(err, "Incorrect format in file '%s'", configFile)
+		}
+	}
+	return nil
 }

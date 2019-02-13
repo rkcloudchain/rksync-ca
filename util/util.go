@@ -1,35 +1,23 @@
 package util
 
 import (
+	"crypto/ecdsa"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+	"math/big"
 	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
+	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/config"
-	"github.com/spf13/viper"
 )
-
-// UnmarshalConfig unmarshals a configuration file
-func UnmarshalConfig(cfg interface{}, vp *viper.Viper, configFile string, server bool) error {
-	vp.SetConfigFile(configFile)
-	err := vp.ReadInConfig()
-	if err != nil {
-		return errors.Wrapf(err, "Failed to read config file '%s'", configFile)
-	}
-
-	err = vp.Unmarshal(cfg)
-	if err != nil {
-		return errors.Wrapf(err, "Incorrect format in file '%s'", configFile)
-	}
-
-	if server {
-		serverCfg := cfg.(*config.ServerConfig)
-		err = vp.Unmarshal(&serverCfg.CACfg)
-		if err != nil {
-			return errors.Wrapf(err, "Incorrect format in file '%s'", configFile)
-		}
-	}
-	return nil
-}
 
 // FileExists checks to see if a file exists.
 func FileExists(name string) bool {
@@ -39,4 +27,211 @@ func FileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+// MakeFileNamesAbsolute makes all file names in the list absolute, relative to home
+func MakeFileNamesAbsolute(files []*string, home string) error {
+	for _, filePtr := range files {
+		abs, err := MakeFileAbs(*filePtr, home)
+		if err != nil {
+			return err
+		}
+		*filePtr = abs
+	}
+	return nil
+}
+
+// MakeFileAbs makes 'file' absolute relative to 'dir' if not already absolute
+func MakeFileAbs(file, dir string) (string, error) {
+	if file == "" {
+		return "", nil
+	}
+	if filepath.IsAbs(file) {
+		return file, nil
+	}
+	path, err := filepath.Abs(filepath.Join(dir, file))
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed making '%s' absolute based on '%s'", file, dir)
+	}
+	return path, nil
+}
+
+// GetX509CertificateFromPEM get on x509 certificate from bytes in PEM format
+func GetX509CertificateFromPEM(cert []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(cert)
+	if block == nil {
+		return nil, errors.New("Failed to PEM decode certificate")
+	}
+	x509Cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error parsing certificate")
+	}
+	return x509Cert, nil
+}
+
+// GetRSAPrivateKey get *rsa.PrivateKey from key pem
+func GetRSAPrivateKey(raw []byte) (*rsa.PrivateKey, error) {
+	decoded, _ := pem.Decode(raw)
+	if decoded == nil {
+		return nil, errors.New("Failed to decode the PEM-encoded RSA key")
+	}
+	RSAPrivKey, err := x509.ParsePKCS1PrivateKey(decoded.Bytes)
+	if err == nil {
+		return RSAPrivKey, nil
+	}
+	key, err2 := x509.ParsePKCS8PrivateKey(decoded.Bytes)
+	if err2 == nil {
+		switch key.(type) {
+		case *ecdsa.PrivateKey:
+			return nil, errors.New("Expecting RSA private key but found EC private key")
+		case *rsa.PrivateKey:
+			return key.(*rsa.PrivateKey), nil
+		default:
+			return nil, errors.New("Invalid private key type in PKCS#8 wrapping")
+		}
+	}
+	return nil, errors.Wrap(err, "Failed parsing RSA private key")
+}
+
+// GetECPrivateKey get *ecdsa.PrivateKey from key pem
+func GetECPrivateKey(raw []byte) (*ecdsa.PrivateKey, error) {
+	decoded, _ := pem.Decode(raw)
+	if decoded == nil {
+		return nil, errors.New("Failed to decode the PEM-encoded ECDSA key")
+	}
+	ECPrivKey, err := x509.ParseECPrivateKey(decoded.Bytes)
+	if err == nil {
+		return ECPrivKey, nil
+	}
+	key, err2 := x509.ParsePKCS8PrivateKey(decoded.Bytes)
+	if err2 == nil {
+		switch key.(type) {
+		case *ecdsa.PrivateKey:
+			return key.(*ecdsa.PrivateKey), nil
+		case *rsa.PrivateKey:
+			return nil, errors.New("Expecting EC private key but found RSA private key")
+		default:
+			return nil, errors.New("Invalid private key type in PKCS#8 wrapping")
+		}
+	}
+	return nil, errors.Wrap(err, "Failed parsing EC private key")
+}
+
+// GetEnrollmentIDFromPEM returns the EnrollmentID from a PEM buffer
+func GetEnrollmentIDFromPEM(cert []byte) (string, error) {
+	x509Cert, err := GetX509CertificateFromPEM(cert)
+	if err != nil {
+		return "", err
+	}
+
+	return GetEnrollmentIDFromX509Certificate(x509Cert), nil
+}
+
+// GetEnrollmentIDFromX509Certificate returns the EnrollmentID from the x509 certificate
+func GetEnrollmentIDFromX509Certificate(cert *x509.Certificate) string {
+	return cert.Subject.CommonName
+}
+
+// URLRegex is the regular expression to check if a value is an URL
+var URLRegex = regexp.MustCompile("(http)s*://(\\S+):(\\S+)@")
+
+// GetMaskedURL returns masked URL. It masks username and password from the URL if present
+func GetMaskedURL(url string) string {
+	matches := URLRegex.FindStringSubmatch(url)
+	if len(matches) == 4 {
+		matchIdxs := URLRegex.FindStringSubmatchIndex(url)
+		matchStr := url[matchIdxs[0]:matchIdxs[1]]
+		for idx := 2; idx < len(matches); idx++ {
+			if matches[idx] != "" {
+				matchStr = strings.Replace(matchStr, matches[idx], "****", 1)
+			}
+		}
+		url = url[:matchIdxs[0]] + matchStr + url[matchIdxs[1]:len(url)]
+	}
+	return url
+}
+
+// Marshal to bytes
+func Marshal(from interface{}, what string) ([]byte, error) {
+	buf, err := json.Marshal(from)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to marshal %s", what)
+	}
+	return buf, nil
+}
+
+// Unmarshal from bytes
+func Unmarshal(from []byte, to interface{}, what string) error {
+	err := json.Unmarshal(from, to)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to unmarshal %s", what)
+	}
+	return nil
+}
+
+// WriteFile writes a file
+func WriteFile(file string, buf []byte, perm os.FileMode) error {
+	dir := filepath.Dir(file)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			return errors.Wrapf(err, "Failed to create directory '%s' for file '%s'", dir, file)
+		}
+	}
+	return ioutil.WriteFile(file, buf, perm)
+}
+
+// GetSerialAsHex returns the serial number from certificate as hex format
+func GetSerialAsHex(serial *big.Int) string {
+	hex := fmt.Sprintf("%x", serial)
+	return hex
+}
+
+// CreateToken creates a JWT-like token.
+func CreateToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri string, body []byte) (string, error) {
+	x509Cert, err := GetX509CertificateFromPEM(cert)
+	if err != nil {
+		return "", err
+	}
+	publicKey := x509Cert.PublicKey
+
+	var token string
+	switch publicKey.(type) {
+	case *ecdsa.PublicKey:
+		token, err = GenECDSAToken(csp, cert, key, method, uri, body)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return token, nil
+}
+
+// GenECDSAToken signs the http body and cert with ECDSA using EC private key
+func GenECDSAToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri string, body []byte) (string, error) {
+	b64body := base64.StdEncoding.EncodeToString(body)
+	b64cert := base64.StdEncoding.EncodeToString(cert)
+	b64uri := base64.StdEncoding.EncodeToString([]byte(uri))
+	payload := method + "." + b64uri + "." + b64body + "." + b64cert
+
+	return genECDSAToken(csp, key, b64cert, payload)
+}
+
+func genECDSAToken(csp bccsp.BCCSP, key bccsp.Key, b64cert, payload string) (string, error) {
+	digest, digestError := csp.Hash([]byte(payload), &bccsp.SHAOpts{})
+	if digestError != nil {
+		return "", errors.WithMessage(digestError, fmt.Sprintf("Hash failed on '%s'", payload))
+	}
+
+	ecSignature, err := csp.Sign(key, digest, nil)
+	if err != nil {
+		return "", errors.WithMessage(err, "BCCSP signature generation failure")
+	}
+	if len(ecSignature) == 0 {
+		return "", errors.New("BCCSP signature creation failed. Signature must be different than nil")
+	}
+
+	b64sig := base64.StdEncoding.EncodeToString(ecSignature)
+	token := b64cert + "." + b64sig
+	return token, nil
 }

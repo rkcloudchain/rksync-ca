@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/courier-ca/config"
 	"github.com/rkcloudchain/courier-ca/metadata"
 	"github.com/rkcloudchain/courier-ca/util"
 )
@@ -95,7 +96,7 @@ func (s *ServerCmd) configInit() (err error) {
 		log.Infof("Configuration file location: %s", s.cfgFileName)
 	}
 
-	err = util.UnmarshalConfig(s.cfg, s.v, s.cfgFileName, true)
+	err = config.UnmarshalConfig(s.cfg, s.v, s.cfgFileName, true)
 	if err != nil {
 		return err
 	}

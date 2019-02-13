@@ -1,6 +1,9 @@
 package api
 
-import "github.com/cloudflare/cfssl/csr"
+import (
+	"github.com/cloudflare/cfssl/csr"
+	"github.com/rkcloudchain/courier-ca/api/credential"
+)
 
 // CSRInfo is Certificate Signing Request (CSR) Information
 type CSRInfo struct {
@@ -49,4 +52,26 @@ func (ar *AttributeRequest) IsRequired() bool {
 func NewBasicKeyRequest() *BasicKeyRequest {
 	bkr := csr.NewBasicKeyRequest()
 	return &BasicKeyRequest{Algo: bkr.A, Size: bkr.S}
+}
+
+// Identity is courier-ca's implementation of an identity
+type Identity struct {
+	Name  string
+	Creds []credential.Credential
+}
+
+// GetCAInfoResponse is the response from the GetCAInfo call
+type GetCAInfoResponse struct {
+	// CAName is the name of the CA
+	CAName string
+	// CAChain is the PEM-encoded bytes of the courier-ca server's CA chain.
+	CAChain []byte
+	// Version of the server
+	Version string
+}
+
+// EnrollmentResponse is the response from Client.Enroll and Identity.Reenroll
+type EnrollmentResponse struct {
+	Identity *Identity
+	CAInfo   GetCAInfoResponse
 }

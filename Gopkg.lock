@@ -2,9 +2,10 @@
 
 
 [[projects]]
-  digest = "1:c2f899c5cd45f16d95ad1a570084e1559647909d977e23574f995bcd29652fba"
+  digest = "1:ef214866cabb3c7e2a0dc935682a19e6c35f96e90fb306d6f775d4f1d4a3910a"
   name = "github.com/cloudflare/cfssl"
   packages = [
+    "api",
     "auth",
     "certdb",
     "config",
@@ -79,6 +80,23 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:8c89d5a5aa307487139bc2c3ef41be67492567e2512ccd7e68ded7c4fa218a46"
+  name = "github.com/hyperledger/fabric"
+  packages = [
+    "bccsp",
+    "bccsp/factory",
+    "bccsp/pkcs11",
+    "bccsp/signer",
+    "bccsp/sw",
+    "bccsp/utils",
+    "common/flogging",
+    "common/flogging/fabenc",
+  ]
+  pruneopts = "UT"
+  revision = "d700b43476e803c864c48021e63a78543b60e17e"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -117,12 +135,28 @@
   version = "v1.8.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5ae265eb6d780f3560f0f937fa6eb1b6488c58217e632be45d0c30da2832a90e"
+  name = "github.com/miekg/pkcs11"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "79c216b7cb4d810ef51e2d89431d91f481a8a273"
+
+[[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
   revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
   version = "v1.1.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:41f3b549dbb8216e490c27926c09dc055aa509b3476e7cbc3317103990b13aeb"
+  name = "github.com/op/go-logging"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "970db520ece77730c7e4724c61121037378659d9"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -192,8 +226,40 @@
   version = "v1.3.1"
 
 [[projects]]
+  digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  digest = "1:60bf2a5e347af463c42ed31a493d817f8a72f102543060ed992754e689805d1a"
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:1a48a306f348a6454fbe88c77c25430de7c3427c4081735d3223aa97c302c24f"
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore",
+    "zapgrpc",
+  ]
+  pruneopts = "UT"
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
+
+[[projects]]
   branch = "master"
-  digest = "1:88059f6a0aac262a2269f071ebf2f2df04307b7698c1ce65fe1a53e3e0b9a7ea"
+  digest = "1:8b302d8e67832b5b43142bead60c2dfd50b2264ea5c00249d65cfd67748966d2"
   name = "golang.org/x/crypto"
   packages = [
     "cryptobyte",
@@ -201,6 +267,7 @@
     "ocsp",
     "pkcs12",
     "pkcs12/internal/rc2",
+    "sha3",
   ]
   pruneopts = "UT"
   revision = "74369b46fc6756741c016591724fd1cb8e26845f"
@@ -237,6 +304,14 @@
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:408b558659d4de230beebcd6b8772e260d510aec4217bf298f635863f46691e7"
+  name = "google.golang.org/grpc"
+  packages = ["grpclog"]
+  pruneopts = "UT"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
+
+[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -248,14 +323,21 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/cloudflare/cfssl/api",
     "github.com/cloudflare/cfssl/config",
     "github.com/cloudflare/cfssl/csr",
+    "github.com/cloudflare/cfssl/helpers",
     "github.com/cloudflare/cfssl/log",
     "github.com/cloudflare/cfssl/signer",
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/mux",
+    "github.com/hyperledger/fabric/bccsp",
+    "github.com/hyperledger/fabric/bccsp/factory",
+    "github.com/hyperledger/fabric/bccsp/signer",
+    "github.com/hyperledger/fabric/bccsp/utils",
     "github.com/jmoiron/sqlx",
     "github.com/lib/pq",
+    "github.com/mitchellh/mapstructure",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
