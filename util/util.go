@@ -235,3 +235,23 @@ func genECDSAToken(csp bccsp.BCCSP, key bccsp.Key, b64cert, payload string) (str
 	token := b64cert + "." + b64sig
 	return token, nil
 }
+
+// NormalizeStringSlice checks for seperators
+func NormalizeStringSlice(slice []string) []string {
+	var normalizeSlice []string
+
+	if len(slice) > 0 {
+		for _, item := range slice {
+			if strings.HasPrefix(item, "[") && strings.HasSuffix(item, "]") {
+				item = item[1 : len(item)-1]
+			}
+
+			if strings.Contains(item, ",") {
+				normalizeSlice = append(normalizeSlice, strings.Split(item, ",")...)
+			} else {
+				normalizeSlice = append(normalizeSlice, item)
+			}
+		}
+	}
+	return normalizeSlice
+}

@@ -54,14 +54,19 @@ type ClientAuth struct {
 // CAConfig is the CA instance's configuration
 type CAConfig struct {
 	Version      string
-	Cfg          CfgOptions
 	CA           CAInfo
 	Signing      *cfsslcfg.Signing
 	CSR          api.CSRInfo
 	Intermediate IntermediateCA
+	Registry     CAConfigRegistry
 	CRL          CRLConfig
 	CSP          *factory.FactoryOpts
 	Client       *ClientConfig
+}
+
+// CAConfigRegistry is the registry part of the server's config
+type CAConfigRegistry struct {
+	MaxEnrollments int
 }
 
 // CRLConfig contains configuration options used by the gencrl request handler
@@ -79,10 +84,6 @@ type ParentServer struct {
 type IntermediateCA struct {
 	ParentServer ParentServer
 	TLS          ClientTLSConfig
-}
-
-// CfgOptions is a CA configuration that allows for setting different options
-type CfgOptions struct {
 }
 
 // CAInfo is the CA information on a courier-ca

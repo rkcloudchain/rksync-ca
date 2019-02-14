@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/cloudflare/cfssl/csr"
 	"github.com/rkcloudchain/courier-ca/api/credential"
+	"github.com/rkcloudchain/courier-ca/api/credential/x509"
 )
 
 // CSRInfo is Certificate Signing Request (CSR) Information
@@ -58,6 +59,20 @@ func NewBasicKeyRequest() *BasicKeyRequest {
 type Identity struct {
 	Name  string
 	Creds []credential.Credential
+}
+
+// GetECert returns the enrollment certificate signer for this identity
+func (i *Identity) GetECert() *x509.Signer {
+	for _, cred := range i.Creds {
+		if cred.Type() == x509.CredType {
+			v, _ := cred.Val()
+			if v != nil {
+				s, _ := v.(*x509.Signer)
+				return s
+			}
+		}
+	}
+	return nil
 }
 
 // GetCAInfoResponse is the response from the GetCAInfo call
