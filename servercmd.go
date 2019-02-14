@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"github.com/cloudflare/cfssl/log"
+	"github.com/pkg/errors"
 	"github.com/rkcloudchain/courier-ca/config"
 	"github.com/rkcloudchain/courier-ca/metadata"
+	"github.com/rkcloudchain/courier-ca/server"
 	"github.com/rkcloudchain/courier-ca/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,6 +64,24 @@ func (s *ServerCmd) init() {
 	}
 	s.rootCmd = rootCmd
 
+	initCmd := &cobra.Command{
+		Use:   "init",
+		Short: fmt.Sprintf("Initialize the %s", shortName),
+		Long:  "Generate the key material needed by the server if it doesn't already exist",
+	}
+	initCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			return errors.Errorf(extraArgsError, args, initCmd.UsageString())
+		}
+		err := s.getServer().Init(false)
+		if err != nil {
+			util.Fatal("Initialization failure: %s", err)
+		}
+		log.Info("Initialization was successful")
+		return nil
+	}
+	s.rootCmd.AddCommand(initCmd)
+
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Prints Courier CA Server version",
@@ -91,4 +111,15 @@ func (s *ServerCmd) registerFlags() {
 // Configuration file is not required for some commands like version
 func (s *ServerCmd) configRequired() bool {
 	return s.name != version
+}
+
+// getServer returns a server.Server for the init and start commands
+func (s *ServerCmd) getServer() *server.Server {
+	return &server.Server{
+		HomeDir: s.homeDirectory,
+		Config:  s.cfg,
+		CA: server.CA{
+			Config: &s.cfg.CACfg,
+		},
+	}
 }

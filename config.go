@@ -16,6 +16,7 @@ import (
 
 const (
 	cmdName      = "courier-ca"
+	shortName    = "courier-ca server"
 	longName     = "CloucChain Courier Certificate Authority Server"
 	envVarPrefix = "COURIER_CA"
 )
@@ -67,6 +68,10 @@ db:
   type: mysql
   datasource:
 `
+)
+
+var (
+	extraArgsError = "Unrecognized arguments found: %v\n\n%s"
 )
 
 // Initialize config

@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:ac228379e7f2f8c203b047d960cfeef5a21cf770593d810dd36a59f78f37a053"
+  digest = "1:840a305ca62563d1e0663dcb5427b5790d4a6d96b3ef07bf86aed8184b36becb"
   name = "github.com/cloudflare/cfssl"
   packages = [
     "api",
@@ -19,6 +19,7 @@
     "initca",
     "log",
     "ocsp/config",
+    "revoke",
     "signer",
     "signer/local",
   ]
@@ -380,7 +381,9 @@
     "github.com/cloudflare/cfssl/helpers",
     "github.com/cloudflare/cfssl/initca",
     "github.com/cloudflare/cfssl/log",
+    "github.com/cloudflare/cfssl/revoke",
     "github.com/cloudflare/cfssl/signer",
+    "github.com/cloudflare/cfssl/signer/local",
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/mux",
     "github.com/hyperledger/fabric/bccsp",

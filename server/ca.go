@@ -74,6 +74,14 @@ type CA struct {
 	mutex sync.Mutex
 }
 
+// initCA will initialize the passed in pointer to a CA struct
+func initCA(ca *CA, homeDir string, config *config.CAConfig, renew bool) error {
+	ca.HomeDir = homeDir
+	ca.Config = config
+
+	return ca.init(renew)
+}
+
 // Init initializes an instance of a CA
 func (ca *CA) init(renew bool) (err error) {
 	log.Debugf("Init CA with home %s and config %+v", ca.HomeDir, *ca.Config)
@@ -99,6 +107,11 @@ func (ca *CA) init(renew bool) (err error) {
 		if caerrors.IsFatalError(err) {
 			return err
 		}
+	}
+
+	err = ca.initEnrollmentSigner()
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -342,6 +355,39 @@ func (ca *CA) initUserRegistry() {
 	dbAccessor.SetDB(ca.db)
 	ca.registry = dbAccessor
 	log.Debug("Initialized DB identity registry")
+}
+
+// Initialize the enrollment signer
+func (ca *CA) initEnrollmentSigner() (err error) {
+	log.Debug("Initializing enrollment signer")
+	c := ca.Config
+
+	var policy *cfcfg.Signing
+	if c.Signing != nil {
+		policy = c.Signing
+	} else {
+		policy = &cfcfg.Signing{
+			Profiles: map[string]*cfcfg.SigningProfile{},
+			Default:  cfcfg.DefaultConfig(),
+		}
+		policy.Default.CAConstraint.IsCA = true
+	}
+
+	parentServerURL := ca.Config.Intermediate.ParentServer.URL
+	if parentServerURL != "" {
+		err = policy.OverrideRemotes(parentServerURL)
+		if err != nil {
+			return errors.Wrap(err, "Failed initializing enrollment signer")
+		}
+	}
+
+	ca.enrollSigner, err = util.BCCSPBackedSigner(c.CA.Certfile, c.CA.Keyfile, policy, ca.csp)
+	if err != nil {
+		return err
+	}
+	ca.enrollSigner.SetDBAccessor(ca.certDBAccessor)
+
+	return nil
 }
 
 // Get the CA certificate for this CA
@@ -692,4 +738,16 @@ func (ca *CA) normalizeStringSlices() {
 		norm := util.NormalizeStringSlice(*namePtr)
 		*namePtr = norm
 	}
+}
+
+// Close CA's DB
+func (ca *CA) closeDB() error {
+	if ca.db != nil {
+		err := ca.db.Close()
+		ca.db = nil
+		if err != nil {
+			return errors.Wrapf(err, "Failed to close CA database, where CA home directory is '%s'", ca.HomeDir)
+		}
+	}
+	return nil
 }

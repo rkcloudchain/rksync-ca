@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cloudflare/cfssl/log"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 )
@@ -254,4 +256,31 @@ func NormalizeStringSlice(slice []string) []string {
 		}
 	}
 	return normalizeSlice
+}
+
+// Read reads from Reader into a byte array
+func Read(r io.Reader, data []byte) ([]byte, error) {
+	j := 0
+	for {
+		n, err := r.Read(data[j:])
+		j = j + n
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, errors.Wrap(err, "Read failure")
+		}
+
+		if (n == 0 && j == len(data)) || j > len(data) {
+			return nil, errors.New("Size of requested data is too large")
+		}
+	}
+
+	return data[:j], nil
+}
+
+// Fatal logs fatal message and exists
+func Fatal(format string, v ...interface{}) {
+	log.Fatalf(format, v...)
+	os.Exit(1)
 }

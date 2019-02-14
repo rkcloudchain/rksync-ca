@@ -13,9 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cloudflare/cfssl/config"
 	"github.com/cloudflare/cfssl/csr"
 	"github.com/cloudflare/cfssl/helpers"
 	"github.com/cloudflare/cfssl/log"
+	"github.com/cloudflare/cfssl/signer"
+	"github.com/cloudflare/cfssl/signer/local"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	cspsigner "github.com/hyperledger/fabric/bccsp/signer"
@@ -292,4 +295,31 @@ func getBCCSPKeyOpts(kr csr.KeyRequest, ephemeral bool) (opts bccsp.KeyGenOpts, 
 	default:
 		return nil, errors.Errorf("Invalid algorithm: %s", kr.Algo())
 	}
+}
+
+// BCCSPBackedSigner attempts to create a signer using csp bccsp.BCCSP.
+func BCCSPBackedSigner(caFile, keyFile string, policy *config.Signing, csp bccsp.BCCSP) (signer.Signer, error) {
+	_, cspSigner, parsedCA, err := GetSingerFromCertFile(caFile, csp)
+	if err != nil {
+		log.Debugf("No key found in BCCSP keystore, attempting fallback")
+		var key bccsp.Key
+		var signer crypto.Signer
+
+		key, err = ImportBCCSPKeyFromPEM(keyFile, csp, false)
+		if err != nil {
+			return nil, errors.WithMessage(err, fmt.Sprintf("Could not find the private key in BCCSP keystore nor in keyfile '%s'", keyFile))
+		}
+
+		signer, err = cspsigner.New(csp, key)
+		if err != nil {
+			return nil, errors.WithMessage(err, "Failed initializing CryptoSigner")
+		}
+		cspSigner = signer
+	}
+
+	signer, err := local.NewSigner(cspSigner, parsedCA, signer.DefaultSigAlgo(cspSigner), policy)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create new signer")
+	}
+	return signer, nil
 }

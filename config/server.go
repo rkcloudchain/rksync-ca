@@ -22,6 +22,8 @@ type ServerConfig struct {
 	CACfg CAConfig
 	// TLS for the server's listening endpoint
 	TLS ServerTLSConfig
+	// Size limit of an acceptable CRL in bytes
+	CRLSizeLimit int
 }
 
 // ServerTLSConfig defines key material for a TLS server
