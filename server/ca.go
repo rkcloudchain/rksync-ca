@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -19,6 +20,7 @@ import (
 	"github.com/cloudflare/cfssl/initca"
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/signer"
+	"github.com/cloudflare/cfssl/signer/local"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/courier-ca/api"
@@ -750,4 +752,98 @@ func (ca *CA) closeDB() error {
 		}
 	}
 	return nil
+}
+
+// Returns expiration of the CA certificate
+func (ca *CA) getCACertExpiry() (time.Time, error) {
+	var caexpiry time.Time
+	signer, ok := ca.enrollSigner.(*local.Signer)
+	if ok {
+		cacert, err := signer.Certificate("", "ca")
+		if err != nil {
+			log.Errorf("Failed to get CA certificate for CA %s: %s", ca.Config.CA.Name, err)
+			return caexpiry, err
+		} else if cacert != nil {
+			caexpiry = cacert.NotAfter
+		}
+	} else {
+		log.Errorf("Not expected condition as the enrollSigner can only be cfssl/signer/local/Signer")
+		return caexpiry, errors.New("Unexpected error while getting CA certificate expiration")
+	}
+	return caexpiry, nil
+}
+
+// Returns nil error and the value of the attribute
+// if the user has the attribute, or an appropriate error if the user
+// does not have this attribute
+func (ca *CA) userHasAttribute(username, attrname string) (string, error) {
+	val, err := ca.getUserAttrValue(username, attrname)
+	if err != nil {
+		return "", err
+	}
+	if val == "" {
+		return "", errors.Errorf("Identity '%s' does not have attribute '%s'", username, attrname)
+	}
+	return val, nil
+}
+
+// Returns nil if the attribute has one of the following values:
+// "1", "t", "T", "true", "TRUE", "True"
+func (ca *CA) attributeIsTrue(username, attrname string) error {
+	val, err := ca.userHasAttribute(username, attrname)
+	if err != nil {
+		return err
+	}
+	val2, err := strconv.ParseBool(val)
+	if err != nil {
+		return errors.Wrapf(err, "Invalid value for attribute '%s' of identity '%s'", attrname, username)
+	}
+	if val2 {
+		return nil
+	}
+	return errors.Errorf("Attribute '%s' is not set to true for identity '%s'", attrname, username)
+}
+
+// Returns a user's value for an attribute
+func (ca *CA) getUserAttrValue(username, attrname string) (string, error) {
+	log.Debugf("Get user attribute value, identity=%s, attr=%s", username, attrname)
+	user, err := ca.registry.GetUser(username, []string{attrname})
+	if err != nil {
+		return "", err
+	}
+	attrval, err := user.GetAttribute(attrname)
+	if err != nil {
+		return "", errors.WithMessage(err, fmt.Sprintf("Failed to get attribute '%s' for user '%s'", attrname, user.GetName()))
+	}
+	log.Debugf("Get user attribute value, identity=%s, name=%s, value=%s", username, attrname, attrval)
+	return attrval.Value, nil
+}
+
+// Fills the CA info structure appropriately
+func (ca *CA) fillCAInfo(info *api.CAInfoResponseNet) error {
+	caChain, err := ca.getCAChain()
+	if err != nil {
+		return err
+	}
+	info.CAName = ca.Config.CA.Name
+	info.CAChain = base64.StdEncoding.EncodeToString(caChain)
+	info.Version = metadata.GetVersion()
+	return nil
+}
+
+// Get the certificate chain for the CA
+func (ca *CA) getCAChain() (chain []byte, err error) {
+	if ca.Config == nil {
+		return nil, errors.New("The server has no configuration")
+	}
+	certAuth := &ca.Config.CA
+	if util.FileExists(certAuth.Chainfile) {
+		return ioutil.ReadFile(certAuth.Chainfile)
+	}
+
+	if ca.Config.Intermediate.ParentServer.URL == "" {
+		return ioutil.ReadFile(certAuth.Certfile)
+	}
+
+	return nil, errors.Errorf("Chain file does not exist at %s", certAuth.Chainfile)
 }

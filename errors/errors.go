@@ -9,12 +9,38 @@ import (
 
 // Error codes
 var (
+	// Unknown error code
+	ErrUnknown = 0
+	// HTTP method not allowed
+	ErrMethodNotAllowed = 1
+	// No authorization header was found in request
+	ErrNoAuthHdr = 2
+	// Failed reading the HTTP request body
+	ErrReadingReqBody = 3
+	// HTTP request body was empty but should not have been
+	ErrEmptyReqBody = 4
+	// HTTP request body was of the wrong format
+	ErrBadReqBody = 5
+	// Authorization failure
+	ErrAuthenticationFailure = 20
+	// No username and password were in the authorization header
+	ErrNoUserPass = 21
+	// Enrollment is currently disabled for the server
+	ErrEnrollDisabled = 22
+	// Invalid user name
+	ErrInvalidUser = 23
+	// Invalid password
+	ErrInvalidPass = 24
+	// Bad certificate signing request
+	ErrBadCSR = 31
 	// Error connecting to database
 	ErrConnectingDB = 51
 	// Error occured when making a Get request to database
 	ErrDBGet = 63
 	// Error occured while deleting user
 	ErrDBDeleteUser = 65
+	// Incorrect password limit reached
+	ErrPasswordAttempts = 73
 )
 
 // CreateHTTPErr constructs a new HTTP error.
@@ -46,6 +72,31 @@ type HTTPErr struct {
 // Error returns the string representation
 func (he *HTTPErr) Error() string {
 	return he.String()
+}
+
+// GetStatusCode returns the HTTP status code
+func (he *HTTPErr) GetStatusCode() int {
+	return he.scode
+}
+
+// GetLocalCode returns the local error code
+func (he *HTTPErr) GetLocalCode() int {
+	return he.lcode
+}
+
+// GetLocalMsg returns the local error message
+func (he *HTTPErr) GetLocalMsg() string {
+	return he.lmsg
+}
+
+// GetRemoteCode returns the remote error code
+func (he *HTTPErr) GetRemoteCode() int {
+	return he.rcode
+}
+
+// GetRemoteMsg returns the remote error message
+func (he *HTTPErr) GetRemoteMsg() string {
+	return he.rmsg
 }
 
 // String returns a string representation of this augmented error
@@ -117,4 +168,11 @@ func IsFatalError(err error) bool {
 	}
 
 	return false
+}
+
+// NewAuthenticationErr constructs an HTTP error specifically indicating an authentication failure.
+func NewAuthenticationErr(code int, format string, args ...interface{}) error {
+	he := CreateHTTPErr(401, code, format, args...)
+	he.Remote(ErrAuthenticationFailure, "Authentication failure")
+	return he
 }

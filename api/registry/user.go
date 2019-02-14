@@ -18,6 +18,10 @@ type User interface {
 	GetMaxEnrollments() int
 	GetAttribute(name string) (*api.Attribute, error)
 	GetAttributes(attrNames []string) ([]api.Attribute, error)
+	GetFailedLoginAttempts() int
+	IncrementIncorrectPasswordAttempts() error
+	Login(password string, caMaxEnrollment int) error
+	LoginComplete() error
 }
 
 // UserRegistry is the API for retreiving users

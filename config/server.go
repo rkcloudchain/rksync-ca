@@ -8,6 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	// DefaultServerPort is the default listening port for the courier-ca server
+	DefaultServerPort = 8054
+
+	// DefaultServerAddr is the default listening address for the courier-ca server
+	DefaultServerAddr = "0.0.0.0"
+)
+
 // ServerConfig is the courier-ca server's configuration
 type ServerConfig struct {
 	// Listening port for the server
