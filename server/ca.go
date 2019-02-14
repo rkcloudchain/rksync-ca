@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	cfcfg "github.com/cloudflare/cfssl/config"
@@ -21,9 +22,12 @@ import (
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/courier-ca/api"
+	"github.com/rkcloudchain/courier-ca/api/registry"
 	"github.com/rkcloudchain/courier-ca/attrmgr"
 	"github.com/rkcloudchain/courier-ca/client"
 	"github.com/rkcloudchain/courier-ca/config"
+	dbutil "github.com/rkcloudchain/courier-ca/db"
+	caerrors "github.com/rkcloudchain/courier-ca/errors"
 	"github.com/rkcloudchain/courier-ca/metadata"
 	"github.com/rkcloudchain/courier-ca/util"
 )
@@ -59,6 +63,15 @@ type CA struct {
 	attrMgr *attrmgr.Mgr
 	// The crypto service provider (BCCSP)
 	csp bccsp.BCCSP
+	// The database handle used to store certificate and optionally
+	// the user registry information
+	db *dbutil.DB
+	// The certificate DB accessor
+	certDBAccessor *CertDBAccessor
+	// The user registry
+	registry registry.UserRegistry
+	// CA mutex
+	mutex sync.Mutex
 }
 
 // Init initializes an instance of a CA
@@ -78,6 +91,14 @@ func (ca *CA) init(renew bool) (err error) {
 	err = ca.initKeyMaterial(renew)
 	if err != nil {
 		return err
+	}
+
+	err = ca.initDB()
+	if err != nil {
+		log.Errorf("Error occurred initializing database: %s", err)
+		if caerrors.IsFatalError(err) {
+			return err
+		}
 	}
 
 	return nil
@@ -205,6 +226,122 @@ func (ca *CA) initKeyMaterial(renew bool) error {
 	log.Infof("The certificate is at: %s", certFile)
 
 	return nil
+}
+
+// Initialize the dataase for the CA
+func (ca *CA) initDB() error {
+	log.Debug("Initializing DB")
+
+	if ca.db != nil && ca.db.IsInitialized() {
+		return nil
+	}
+
+	ca.mutex.Lock()
+	defer ca.mutex.Unlock()
+
+	if ca.db != nil && ca.db.IsInitialized() {
+		return nil
+	}
+
+	db := &ca.Config.DB
+	dbError := false
+	var err error
+
+	if db.Type == "" || db.Datasource == "" {
+		return errors.New("CA database configuration is not specified")
+	}
+
+	ds := dbutil.MakeDBCred(db.Datasource)
+	log.Debugf("Initializing '%s' database at '%s'", db.Type, ds)
+
+	switch db.Type {
+	case "postgres":
+		ca.db, err = dbutil.NewUserRegistryPostgres(db.Datasource)
+		if err != nil {
+			return errors.WithMessage(err, "Failed to create user registry for PostgresSQL")
+		}
+	case "mysql":
+		ca.db, err = dbutil.NewUserRegistryMySQL(db.Datasource)
+		if err != nil {
+			return errors.WithMessage(err, "Failed to create user registry for MySQL")
+		}
+	default:
+		return errors.Errorf("Invalid db.Type in config file: '%s', must be 'postgres' or 'mysql'", db.Type)
+	}
+
+	ca.certDBAccessor = NewCertDBAccessor(ca.db)
+	if ca.enrollSigner != nil {
+		ca.enrollSigner.SetDBAccessor(ca.certDBAccessor)
+	}
+	ca.initUserRegistry()
+
+	err = ca.loadUsersTable()
+	if err != nil {
+		log.Error(err)
+		dbError = true
+		if caerrors.IsFatalError(err) {
+			return err
+		}
+	}
+
+	if dbError {
+		return errors.Errorf("Failed to initialize %s database at %s", db.Type, ds)
+	}
+
+	ca.db.IsDBInitialized = true
+	log.Infof("Initialized %s database at %s", db.Type, ds)
+	return nil
+}
+
+// Adds the configured users to the table if not already found
+func (ca *CA) loadUsersTable() error {
+	log.Debug("Loading identity table")
+	registry := &ca.Config.Registry
+	for _, id := range registry.Identities {
+		log.Debugf("Loading identity '%s'", id.Name)
+		err := ca.addIdentity(&id, false)
+		if err != nil {
+			return errors.WithMessage(err, "Failed to load identity table")
+		}
+	}
+	log.Debug("Successfully loaded identity table")
+	return nil
+}
+
+// Add an identity to the registry
+func (ca *CA) addIdentity(id *config.CAConfigIdentity, errIfFound bool) error {
+	var err error
+	user, _ := ca.registry.GetUser(id.Name, nil)
+	if user != nil {
+		if errIfFound {
+			return errors.Errorf("Identity '%s' is already registered", id.Name)
+		}
+		log.Debugf("Identity '%s' already registered, loaded identity", user.GetName())
+		return nil
+	}
+
+	rec := registry.UserInfo{
+		Name:           id.Name,
+		Pass:           id.Pass,
+		Attributes:     []api.Attribute{},
+		MaxEnrollments: ca.Config.Registry.MaxEnrollments,
+	}
+
+	err = ca.registry.InsertUser(&rec)
+	if err != nil {
+		return errors.WithMessage(err, fmt.Sprintf("Failed to insert identity '%s'", id.Name))
+	}
+	log.Debug("Registered identity: %+v", id)
+	return nil
+}
+
+// Initialize the user registry interface
+func (ca *CA) initUserRegistry() {
+	log.Debug("Initializing identity registry")
+	dbAccessor := new(Accessor)
+	dbAccessor.SetDB(ca.db)
+	ca.registry = dbAccessor
+	log.Debug("Initialized DB identity registry")
 }
 
 // Get the CA certificate for this CA

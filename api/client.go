@@ -22,6 +22,23 @@ type BasicKeyRequest struct {
 	Size int    `json:"size" yaml:"size"`
 }
 
+// Attribute is a name and value pair
+type Attribute struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+	ECert bool   `json:"ecert,omitempty"`
+}
+
+// GetName returns the name of the attribute
+func (a *Attribute) GetName() string {
+	return a.Name
+}
+
+// GetValue returns the value of the attribute
+func (a *Attribute) GetValue() string {
+	return a.Value
+}
+
 // EnrollmentRequest is a request to enroll an identity
 type EnrollmentRequest struct {
 	Name     string              `json:"name"`
