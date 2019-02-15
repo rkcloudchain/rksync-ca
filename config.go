@@ -182,7 +182,7 @@ func (s *ServerCmd) createDefaultConfigFile() error {
 
 	ds := s.v.GetString("datasource")
 	if ds == "" {
-		return errors.New("The '-ds datasour' option is required")
+		return errors.New("The '-ds datasource' option is required")
 	}
 
 	cfg := strings.Replace(defaultCfgTemplate, "<<<VERSION>>>", metadata.Version, 1)
