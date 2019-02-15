@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -12,11 +13,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cloudflare/cfssl/api"
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/revoke"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/courier-ca/config"
+	caerrors "github.com/rkcloudchain/courier-ca/errors"
 	"github.com/rkcloudchain/courier-ca/metadata"
 	"github.com/rkcloudchain/courier-ca/util"
 )
@@ -289,6 +292,7 @@ func (s *Server) closeListener() error {
 
 func (s *Server) registerHandlers() {
 	s.mux = mux.NewRouter()
+	s.registerHandler("enroll", enrollHandler, http.MethodPost)
 }
 
 func (s *Server) registerHandler(path string, e endpoint, methods ...string) {
@@ -300,7 +304,79 @@ func (s *Server) registerHandler(path string, e endpoint, methods ...string) {
 }
 
 func (s *Server) wrap(handler func(http.ResponseWriter, *http.Request) (interface{}, error)) http.HandlerFunc {
-	return nil
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Debugf("Received request for %s", r.URL.String())
+		resp, err := handler(w, r)
+		he := s.getHTTPErr(err)
+
+		w.Header().Set("Connection", "Keep-Alive")
+		if r.Method == http.MethodHead {
+			w.Header().Set("Content-Length", "0")
+		} else {
+			w.Header().Set("Transfer-Encoding", "chunked")
+			w.Header().Set("Content-Type", "application/json")
+		}
+
+		if he != nil {
+			w.WriteHeader(he.GetStatusCode())
+			log.Infof(`%s %s %s %d %d "%s"`, r.RemoteAddr, r.Method, r.URL, he.GetStatusCode(), he.GetLocalCode(), he.GetLocalMsg())
+		} else {
+			w.WriteHeader(http.StatusOK)
+			log.Infof(`%s %s %s %d 0 "OK"`, r.RemoteAddr, r.Method, r.URL, http.StatusOK)
+		}
+
+		if r.Method != http.MethodHead {
+			w.Write([]byte(`{"result":`))
+			if resp != nil {
+				s.writeJSON(resp, w)
+			} else {
+				w.Write([]byte(`""`))
+			}
+
+			w.Write([]byte(`,"errors":[`))
+			if he != nil {
+				rm := &api.ResponseMessage{Code: he.GetRemoteCode(), Message: he.GetRemoteMsg()}
+				s.writeJSON(rm, w)
+			}
+			w.Write([]byte(`],"messages":[],"success":`))
+			if he != nil {
+				w.Write([]byte(`false}`))
+			} else {
+				w.Write([]byte(`true}`))
+			}
+		}
+	}
+}
+
+func (s *Server) writeJSON(obj interface{}, w http.ResponseWriter) {
+	enc := json.NewEncoder(w)
+	err := enc.Encode(obj)
+	if err != nil {
+		log.Errorf("Failed encoding response to JSON: %s", err)
+	}
+}
+
+func (s *Server) getHTTPErr(err error) *caerrors.HTTPErr {
+	if err == nil {
+		return nil
+	}
+	type causer interface {
+		Cause() error
+	}
+
+	curErr := err
+	for curErr != nil {
+		switch curErr.(type) {
+		case *caerrors.HTTPErr:
+			return curErr.(*caerrors.HTTPErr)
+		case causer:
+			curErr = curErr.(causer).Cause()
+		default:
+			return caerrors.CreateHTTPErr(500, caerrors.ErrUnknown, err.Error())
+		}
+	}
+
+	return caerrors.CreateHTTPErr(500, caerrors.ErrUnknown, "nil error")
 }
 
 // GetCA returns the CA instance

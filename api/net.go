@@ -21,3 +21,13 @@ type EnrollmentResponseNet struct {
 	Cert       string
 	ServerInfo CAInfoResponseNet
 }
+
+// RegistrationRequestNet is the registration request for a new identity
+type RegistrationRequestNet struct {
+	RegistrationRequest
+}
+
+// RegistrationResponseNet is a registration response
+type RegistrationResponseNet struct {
+	RegistrationResponse
+}

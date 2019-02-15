@@ -75,12 +75,6 @@ type CAConfig struct {
 	DB           CAConfigDB
 }
 
-// CAConfigIdentity is identity information in the server's config
-type CAConfigIdentity struct {
-	Name string
-	Pass string
-}
-
 // CAConfigDB is the database part of the server's config
 type CAConfigDB struct {
 	Type       string
@@ -90,7 +84,6 @@ type CAConfigDB struct {
 // CAConfigRegistry is the registry part of the server's config
 type CAConfigRegistry struct {
 	MaxEnrollments int
-	Identities     []CAConfigIdentity
 }
 
 // CRLConfig contains configuration options used by the gencrl request handler

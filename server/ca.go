@@ -259,7 +259,6 @@ func (ca *CA) initDB() error {
 	}
 
 	db := &ca.Config.DB
-	dbError := false
 	var err error
 
 	if db.Type == "" || db.Datasource == "" {
@@ -290,63 +289,8 @@ func (ca *CA) initDB() error {
 	}
 	ca.initUserRegistry()
 
-	err = ca.loadUsersTable()
-	if err != nil {
-		log.Error(err)
-		dbError = true
-		if caerrors.IsFatalError(err) {
-			return err
-		}
-	}
-
-	if dbError {
-		return errors.Errorf("Failed to initialize %s database at %s", db.Type, ds)
-	}
-
 	ca.db.IsDBInitialized = true
 	log.Infof("Initialized %s database at %s", db.Type, ds)
-	return nil
-}
-
-// Adds the configured users to the table if not already found
-func (ca *CA) loadUsersTable() error {
-	log.Debug("Loading identity table")
-	registry := &ca.Config.Registry
-	for _, id := range registry.Identities {
-		log.Debugf("Loading identity '%s'", id.Name)
-		err := ca.addIdentity(&id, false)
-		if err != nil {
-			return errors.WithMessage(err, "Failed to load identity table")
-		}
-	}
-	log.Debug("Successfully loaded identity table")
-	return nil
-}
-
-// Add an identity to the registry
-func (ca *CA) addIdentity(id *config.CAConfigIdentity, errIfFound bool) error {
-	var err error
-	user, _ := ca.registry.GetUser(id.Name, nil)
-	if user != nil {
-		if errIfFound {
-			return errors.Errorf("Identity '%s' is already registered", id.Name)
-		}
-		log.Debugf("Identity '%s' already registered, loaded identity", user.GetName())
-		return nil
-	}
-
-	rec := registry.UserInfo{
-		Name:           id.Name,
-		Pass:           id.Pass,
-		Attributes:     []api.Attribute{},
-		MaxEnrollments: ca.Config.Registry.MaxEnrollments,
-	}
-
-	err = ca.registry.InsertUser(&rec)
-	if err != nil {
-		return errors.WithMessage(err, fmt.Sprintf("Failed to insert identity '%s'", id.Name))
-	}
-	log.Debug("Registered identity: %+v", id)
 	return nil
 }
 

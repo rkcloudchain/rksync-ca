@@ -107,3 +107,17 @@ type EnrollmentResponse struct {
 	Identity *Identity
 	CAInfo   GetCAInfoResponse
 }
+
+// RegistrationRequest for a new identity
+type RegistrationRequest struct {
+	Name           string      `json:"id"`
+	Secret         string      `json:"secret,omitempty"`
+	MaxEnrollments int         `json:"max_enrollments,omitempty"`
+	Attributes     []Attribute `json:"attrs,omitempty"`
+	CAName         string      `json:"caname,omitempty"`
+}
+
+// RegistrationResponse is a registration response
+type RegistrationResponse struct {
+	Secret string `json:"secret"`
+}

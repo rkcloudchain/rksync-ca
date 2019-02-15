@@ -161,3 +161,34 @@ func convertAttrs(attrs []api.Attribute) []attrmgr.Attribute {
 	}
 	return rtn
 }
+
+func getMaxEnrollments(userMaxEnrollments int, caMaxEnrollments int) (int, error) {
+	log.Debugf("Max enrollment value verification - User specified max enrollment: %d, CA max enrollment: %d", userMaxEnrollments, caMaxEnrollments)
+
+	if userMaxEnrollments < -1 {
+		return 0, errors.Errorf("Max enrollment in registration request may not be less than -1, but was %d", userMaxEnrollments)
+	}
+
+	switch caMaxEnrollments {
+	case -1:
+		if userMaxEnrollments == 0 {
+			return caMaxEnrollments, nil
+		}
+		return userMaxEnrollments, nil
+	case 0:
+		return 0, errors.New("Registration is disabled")
+	default:
+		switch userMaxEnrollments {
+		case -1:
+			return 0, errors.New("Registration for infinite enrollments is not allowed")
+		case 0:
+			return caMaxEnrollments, nil
+		default:
+			if userMaxEnrollments > caMaxEnrollments {
+				return 0, errors.Errorf("Requested enrollments (%d) exceeds maximum allowable enrollments (%d)",
+					userMaxEnrollments, caMaxEnrollments)
+			}
+			return userMaxEnrollments, nil
+		}
+	}
+}

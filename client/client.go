@@ -113,6 +113,34 @@ func (c *Client) initHTTPClient() error {
 	return nil
 }
 
+// Register registers a new identity
+func (c *Client) Register(req *api.RegistrationRequest) (rr *api.RegistrationResponse, err error) {
+	log.Debugf("Register %+v", req)
+
+	if req.Name == "" {
+		return nil, errors.New("Register was called without a Name set")
+	}
+
+	reqBody, err := util.Marshal(req, "RegistrationRequest")
+	if err != nil {
+		return nil, err
+	}
+
+	post, err := c.newPost("register", reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp api.RegistrationResponseNet
+	err = c.SendReq(post, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug("The register request completed successfully")
+	return &resp.RegistrationResponse, nil
+}
+
 // Enroll enrolls a new identity
 func (c *Client) Enroll(req *api.EnrollmentRequest) (*api.EnrollmentResponse, error) {
 	log.Debugf("Enrolling %+v", req)

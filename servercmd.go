@@ -82,6 +82,22 @@ func (s *ServerCmd) init() {
 	}
 	s.rootCmd.AddCommand(initCmd)
 
+	startCmd := &cobra.Command{
+		Use:   "start",
+		Short: fmt.Sprintf("Start the %s", shortName),
+	}
+	startCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			return errors.Errorf(extraArgsError, args, startCmd.UsageString())
+		}
+		err := s.getServer().Start()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	s.rootCmd.AddCommand(startCmd)
+
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Prints Courier CA Server version",
@@ -103,9 +119,7 @@ func (s *ServerCmd) registerFlags() {
 	pflags := s.rootCmd.PersistentFlags()
 	pflags.StringVarP(&s.cfgFileName, "config", "c", "", "Configuration file")
 	pflags.MarkHidden("config")
-
 	pflags.StringVarP(&s.homeDirectory, "home", "H", "", fmt.Sprintf("Server's home directory (default \"%s\")", filepath.Dir(cfg)))
-	util.FlagString(s.v, pflags, "boot", "b", "", "The user:pass for bootstrap admin which is required to build default config file")
 }
 
 // Configuration file is not required for some commands like version

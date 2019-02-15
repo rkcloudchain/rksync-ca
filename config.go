@@ -54,11 +54,6 @@ registry:
   # (default: -1, which means there is no limit)
   maxenrollments: -1
 
-  # Contains identity infomation
-  identities:
-	- name: <<<ADMIN>>>
-	  pass: <<<ADMINPW>>>
-
 #############################################################################
 #  Database section
 #  Supported types are: "postgres", and "mysql".
@@ -110,31 +105,7 @@ func (s *ServerCmd) configInit() (err error) {
 }
 
 func (s *ServerCmd) createDefaultConfigFile() error {
-	var user, pass string
-	up := s.v.GetString("boot")
-	if up == "" {
-		return errors.New("The '-b user:pass' option is required")
-	}
-	ups := strings.Split(up, ":")
-	if len(ups) < 2 {
-		return errors.Errorf("The value '%s' on the command line is missing a colon separator", up)
-	}
-	if len(ups) > 2 {
-		ups = []string{ups[0], strings.Join(ups[1:], ":")}
-	}
-	user = ups[0]
-	pass = ups[1]
-	if len(user) > 1024 {
-		return errors.Errorf("The identity name must be less than 1024 characters: '%s'", user)
-	}
-	if len(pass) == 0 {
-		return errors.New("An empty password in the '-b user:pass' option is not permitted")
-	}
-
 	cfg := strings.Replace(defaultCfgTemplate, "<<<VERSION>>>", metadata.Version, 1)
-	cfg = strings.Replace(cfg, "<<<ADMIN>>>", user, 1)
-	cfg = strings.Replace(cfg, "<<<ADMINPW>>>", pass, 1)
-
 	cfgDir := filepath.Dir(s.cfgFileName)
 	err := os.MkdirAll(cfgDir, 0755)
 	if err != nil {
