@@ -106,6 +106,16 @@ func createMySQLDatabase(dbName string, db *sqlx.DB) error {
 }
 
 func createMySQLTables(dbName string, db *sqlx.DB) error {
+	log.Debug("Creating users table if it does not exist")
+	if _, err := db.Exec("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255) NOT NULL, token blob, attributes TEXT, state INTEGER, max_enrollments INTEGER, incorrect_password_attempts INTEGER DEFAULT 0, PRIMARY KEY (id)) DEFAULT CHARSET=utf8 COLLATE utf8_bin"); err != nil {
+		return errors.Wrap(err, "Error creating users table")
+	}
+
+	log.Debug("Creating certificates table if it does not exist")
+	if _, err := db.Exec("CREATE TABLE IF NOT EXISTS certificates (id VARCHAR(255), serial_number varbinary(128) NOT NULL, authority_key_identifier varbinary(128) NOT NULL, ca_label varbinary(128), status varbinary(128) NOT NULL, reason int, expiry timestamp DEFAULT 0, revoked_at timestamp DEFAULT 0, pem varbinary(4096) NOT NULL, PRIMARY KEY(serial_number, authority_key_identifier)) DEFAULT CHARSET=utf8 COLLATE utf8_bin"); err != nil {
+		return errors.Wrap(err, "Error creating certificates table")
+	}
+
 	return nil
 }
 
@@ -178,6 +188,16 @@ func createPostgresDatabase(dbName string, db *sqlx.DB) error {
 }
 
 func createPostgresTables(dbName string, db *sqlx.DB) error {
+	log.Debug("Creating users table if it does not exist")
+	if _, err := db.Exec("CREATE TABLE IF NOT EXISTS users (id VARCHAR(255), token bytea, attributes TEXT, state INTEGER,  max_enrollments INTEGER, incorrect_password_attempts INTEGER DEFAULT 0)"); err != nil {
+		return errors.Wrap(err, "Error creating users table")
+	}
+
+	log.Debug("Creating certificates table if it does not exist")
+	if _, err := db.Exec("CREATE TABLE IF NOT EXISTS certificates (id VARCHAR(255), serial_number bytea NOT NULL, authority_key_identifier bytea NOT NULL, ca_label bytea, status bytea NOT NULL, reason int, expiry timestamp, revoked_at timestamp, pem bytea NOT NULL, PRIMARY KEY(serial_number, authority_key_identifier))"); err != nil {
+		return errors.Wrap(err, "Error creating certificate table")
+	}
+
 	return nil
 }
 

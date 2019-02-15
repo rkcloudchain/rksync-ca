@@ -120,8 +120,8 @@ func (s *ServerCmd) registerFlags() {
 	pflags.StringVarP(&s.cfgFileName, "config", "c", "", "Configuration file")
 	pflags.MarkHidden("config")
 	pflags.StringVarP(&s.homeDirectory, "home", "H", "", fmt.Sprintf("Server's home directory (default \"%s\")", filepath.Dir(cfg)))
-	util.FlagString(s.v, pflags, "dbtype", "dt", "", "The database type is required to build default config file")
-	util.FlagString(s.v, pflags, "datasource", "ds", "", "The database datasource is required to build default config file")
+	util.FlagString(s.v, pflags, "dbtype", "t", "", "The database type is required to build default config file")
+	util.FlagString(s.v, pflags, "datasource", "s", "", "The database datasource is required to build default config file")
 
 	s.cfg = &config.ServerConfig{}
 }
