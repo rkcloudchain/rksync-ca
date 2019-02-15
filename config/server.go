@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	cfsslcfg "github.com/cloudflare/cfssl/config"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
@@ -87,7 +89,9 @@ type CAConfigRegistry struct {
 }
 
 // CRLConfig contains configuration options used by the gencrl request handler
-type CRLConfig struct{}
+type CRLConfig struct {
+	Expiry time.Duration
+}
 
 // ParentServer contains URL for the parent server and the name of CA inside
 // the server to connect to

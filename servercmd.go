@@ -120,6 +120,8 @@ func (s *ServerCmd) registerFlags() {
 	pflags.StringVarP(&s.cfgFileName, "config", "c", "", "Configuration file")
 	pflags.MarkHidden("config")
 	pflags.StringVarP(&s.homeDirectory, "home", "H", "", fmt.Sprintf("Server's home directory (default \"%s\")", filepath.Dir(cfg)))
+
+	s.cfg = &config.ServerConfig{}
 }
 
 // Configuration file is not required for some commands like version
