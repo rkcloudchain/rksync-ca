@@ -130,8 +130,8 @@ registry:
 #  The datasource value depends on the type.
 #############################################################################
 db:
-  type: mysql
-  datasource:
+  type: <<<DATABASETYPE>>>
+  datasource: <<<DATASOURCE>>>
 `
 )
 
@@ -175,7 +175,19 @@ func (s *ServerCmd) configInit() (err error) {
 }
 
 func (s *ServerCmd) createDefaultConfigFile() error {
+	dtype := s.v.GetString("dbtype")
+	if dtype == "" {
+		return errors.New("The '-dt' option is required (for example '-dt mysql')")
+	}
+
+	ds := s.v.GetString("datasource")
+	if ds == "" {
+		return errors.New("The '-ds datasour' option is required")
+	}
+
 	cfg := strings.Replace(defaultCfgTemplate, "<<<VERSION>>>", metadata.Version, 1)
+	cfg = strings.Replace(cfg, "<<<DATABASETYPE>>>", dtype, 1)
+	cfg = strings.Replace(cfg, "<<<DATASOURCE>>>", ds, 1)
 	cfgDir := filepath.Dir(s.cfgFileName)
 	err := os.MkdirAll(cfgDir, 0755)
 	if err != nil {
