@@ -7,9 +7,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kisielk/sqlstruct"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api/registry"
-	dbutil "github.com/rkcloudchain/courier-ca/db"
-	caerrors "github.com/rkcloudchain/courier-ca/errors"
+	"github.com/rkcloudchain/rksync-ca/api/registry"
+	dbutil "github.com/rkcloudchain/rksync-ca/db"
+	caerrors "github.com/rkcloudchain/rksync-ca/errors"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ocsp"
 )

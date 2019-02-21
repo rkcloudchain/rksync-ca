@@ -15,21 +15,21 @@ var (
 	dbURLRegex = regexp.MustCompile("(Datasource:\\s*)?(\\S+):(\\S+)@|(Datasource:.*\\s)?(user=\\S+).*\\s(password=\\S+)|(Datasource:.*\\s)?(password=\\S+).*\\s(user=\\S+)")
 )
 
-// CourierCADB is the interface with functions implemented by sqlx.DB
-// object that are used by Courier CA server
-type CourierCADB interface {
+// RKSyncCADB is the interface with functions implemented by sqlx.DB
+// object that are used by rksync CA server
+type RKSyncCADB interface {
 	IsInitialized() bool
 	Select(dest interface{}, query string, args ...interface{}) error
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Rebind(query string) string
 	MustBegin() *sqlx.Tx
-	BeginTx() CourierCATx
+	BeginTx() RKSyncCATx
 }
 
-// CourierCATx is the interface with functions implemented by sqlx.Tx
-// object that are used by Courier CA server
-type CourierCATx interface {
+// RKSyncCATx is the interface with functions implemented by sqlx.Tx
+// object that are used by rksync CA server
+type RKSyncCATx interface {
 	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	Select(dest interface{}, query string, args ...interface{}) error
 	Rebind(query string) string
@@ -44,8 +44,8 @@ type DB struct {
 	IsDBInitialized bool
 }
 
-// BeginTx implements BeginTx method of CourierCADB interface
-func (db *DB) BeginTx() CourierCATx {
+// BeginTx implements BeginTx method of RKSyncCADB interface
+func (db *DB) BeginTx() RKSyncCATx {
 	return db.MustBegin()
 }
 

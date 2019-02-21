@@ -6,10 +6,10 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/api/registry"
-	"github.com/rkcloudchain/courier-ca/attrmgr"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api/registry"
+	"github.com/rkcloudchain/rksync-ca/attrmgr"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 // Handle a register request

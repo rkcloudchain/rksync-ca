@@ -9,8 +9,8 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api/credential"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/api/credential"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 const (

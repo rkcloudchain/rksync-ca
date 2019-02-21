@@ -2,8 +2,8 @@ package api
 
 import (
 	"github.com/cloudflare/cfssl/csr"
-	"github.com/rkcloudchain/courier-ca/api/credential"
-	"github.com/rkcloudchain/courier-ca/api/credential/x509"
+	"github.com/rkcloudchain/rksync-ca/api/credential"
+	"github.com/rkcloudchain/rksync-ca/api/credential/x509"
 )
 
 // CSRInfo is Certificate Signing Request (CSR) Information
@@ -72,7 +72,7 @@ func NewBasicKeyRequest() *BasicKeyRequest {
 	return &BasicKeyRequest{Algo: bkr.A, Size: bkr.S}
 }
 
-// Identity is courier-ca's implementation of an identity
+// Identity is rksync-ca's implementation of an identity
 type Identity struct {
 	Name  string
 	Creds []credential.Credential
@@ -96,7 +96,7 @@ func (i *Identity) GetECert() *x509.Signer {
 type GetCAInfoResponse struct {
 	// CAName is the name of the CA
 	CAName string
-	// CAChain is the PEM-encoded bytes of the courier-ca server's CA chain.
+	// CAChain is the PEM-encoded bytes of the rksync-ca server's CA chain.
 	CAChain []byte
 	// Version of the server
 	Version string

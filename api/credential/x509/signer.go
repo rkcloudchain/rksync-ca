@@ -6,8 +6,8 @@ import (
 
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/attrmgr"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/attrmgr"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 // NewSigner is constructor for Signer

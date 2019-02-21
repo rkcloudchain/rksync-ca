@@ -2,10 +2,10 @@ package config
 
 import (
 	"github.com/hyperledger/fabric/bccsp/factory"
-	"github.com/rkcloudchain/courier-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api"
 )
 
-// ClientConfig is the courier-ca client's config
+// ClientConfig is the rksync-ca client's config
 type ClientConfig struct {
 	URL      string
 	MSPDir   string

@@ -6,19 +6,19 @@ import (
 	cfsslcfg "github.com/cloudflare/cfssl/config"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api"
 	"github.com/spf13/viper"
 )
 
 const (
-	// DefaultServerPort is the default listening port for the courier-ca server
+	// DefaultServerPort is the default listening port for the rksync-ca server
 	DefaultServerPort = 8054
 
-	// DefaultServerAddr is the default listening address for the courier-ca server
+	// DefaultServerAddr is the default listening address for the rksync-ca server
 	DefaultServerAddr = "0.0.0.0"
 )
 
-// ServerConfig is the courier-ca server's configuration
+// ServerConfig is the rksync-ca server's configuration
 type ServerConfig struct {
 	// Listening port for the server
 	Port int
@@ -107,7 +107,7 @@ type IntermediateCA struct {
 	TLS          ClientTLSConfig
 }
 
-// CAInfo is the CA information on a courier-ca
+// CAInfo is the CA information on a rksync-ca
 type CAInfo struct {
 	Name      string
 	Keyfile   string

@@ -11,9 +11,9 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/kisielk/sqlstruct"
 	"github.com/pkg/errors"
-	dbutil "github.com/rkcloudchain/courier-ca/db"
-	caerrors "github.com/rkcloudchain/courier-ca/errors"
-	"github.com/rkcloudchain/courier-ca/util"
+	dbutil "github.com/rkcloudchain/rksync-ca/db"
+	caerrors "github.com/rkcloudchain/rksync-ca/errors"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 const (

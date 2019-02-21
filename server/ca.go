@@ -23,15 +23,15 @@ import (
 	"github.com/cloudflare/cfssl/signer/local"
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/api/registry"
-	"github.com/rkcloudchain/courier-ca/attrmgr"
-	"github.com/rkcloudchain/courier-ca/client"
-	"github.com/rkcloudchain/courier-ca/config"
-	dbutil "github.com/rkcloudchain/courier-ca/db"
-	caerrors "github.com/rkcloudchain/courier-ca/errors"
-	"github.com/rkcloudchain/courier-ca/metadata"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api/registry"
+	"github.com/rkcloudchain/rksync-ca/attrmgr"
+	"github.com/rkcloudchain/rksync-ca/client"
+	"github.com/rkcloudchain/rksync-ca/config"
+	dbutil "github.com/rkcloudchain/rksync-ca/db"
+	caerrors "github.com/rkcloudchain/rksync-ca/errors"
+	"github.com/rkcloudchain/rksync-ca/metadata"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 const (
@@ -380,7 +380,7 @@ func (ca *CA) getCACert() (cert []byte, err error) {
 		log.Debugf("Stored intermediate certificate chain at %s", chainPath)
 	} else {
 		if ca.Config.CSR.CN == "" {
-			ca.Config.CSR.CN = "courier-ca"
+			ca.Config.CSR.CN = "rksync-ca"
 		}
 		csr := &ca.Config.CSR
 		if csr.CA == nil {
@@ -452,7 +452,7 @@ func (ca *CA) enroll(cfg *config.ClientConfig, rawurl, home string) (*api.Enroll
 	}
 	if req.Name == "" {
 		expecting := fmt.Sprintf("%s://<enrollmentID>:<secret>@%s", purl.Scheme, purl.Host)
-		return nil, errors.Errorf("The URL of the courier CA server is missing the enrollment ID and secret;"+" found '%s' but expecting '%s'", rawurl, expecting)
+		return nil, errors.Errorf("The URL of the rksync CA server is missing the enrollment ID and secret;"+" found '%s' but expecting '%s'", rawurl, expecting)
 	}
 
 	req.CAName = cfg.CAName

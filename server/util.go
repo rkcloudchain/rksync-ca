@@ -12,9 +12,9 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/signer"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/attrmgr"
-	caerrors "github.com/rkcloudchain/courier-ca/errors"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/attrmgr"
+	caerrors "github.com/rkcloudchain/rksync-ca/errors"
 )
 
 var clientAuthTypes = map[string]tls.ClientAuthType{

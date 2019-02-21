@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Version specifies courier-ca version
+// Version specifies rksync-ca version
 var Version = "1.0.0"
 
-// GetVersionInfo returns version information for the courier-ca
+// GetVersionInfo returns version information for the rksync-ca
 func GetVersionInfo(prgName string) string {
 	if Version == "" {
 		Version = "development build"
@@ -28,7 +28,7 @@ func GetVersionInfo(prgName string) string {
 // GetVersion returns the version
 func GetVersion() string {
 	if Version == "" {
-		panic("Version is not set for courier-ca library")
+		panic("Version is not set for rksync-ca library")
 	}
 	return Version
 }

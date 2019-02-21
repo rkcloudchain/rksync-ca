@@ -5,8 +5,8 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/api/registry"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api/registry"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -20,20 +20,20 @@ import (
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/api/credential"
-	x509cred "github.com/rkcloudchain/courier-ca/api/credential/x509"
-	"github.com/rkcloudchain/courier-ca/config"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/api/credential"
+	x509cred "github.com/rkcloudchain/rksync-ca/api/credential/x509"
+	"github.com/rkcloudchain/rksync-ca/config"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
-// Client is the courier-ca client object
+// Client is the rksync-ca client object
 type Client struct {
 	// The client's home directory
 	HomeDir string
 	// The client's configuration
 	Config *config.ClientConfig
-	// HTTP client associated with this Courier CA client
+	// HTTP client associated with this rksync CA client
 	httpClient *http.Client
 
 	csp               bccsp.BCCSP
@@ -270,7 +270,7 @@ func (c *Client) GetCSP() bccsp.BCCSP {
 	return c.csp
 }
 
-// SendReq sends a request to the courier-ca server and fills in the result
+// SendReq sends a request to the rksync-ca server and fills in the result
 func (c *Client) SendReq(req *http.Request, result interface{}) (err error) {
 	urlStr := req.URL.String()
 	log.Debugf("Sending request %s", urlStr)

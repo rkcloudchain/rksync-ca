@@ -6,12 +6,12 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/api/credential"
-	x509cred "github.com/rkcloudchain/courier-ca/api/credential/x509"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/api/credential"
+	x509cred "github.com/rkcloudchain/rksync-ca/api/credential/x509"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
-// Identity is courier-ca's implementation of an identity
+// Identity is rksync-ca's implementation of an identity
 type Identity struct {
 	name   string
 	client *Client

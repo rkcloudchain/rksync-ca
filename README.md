@@ -1,6 +1,6 @@
-# courier-ca
+# rksync-ca
 
-The CloudChain Courier CA is a Certificate Authority(CA) for CloudChain Courier
+The CloudChain RKSync CA is a Certificate Authority(CA) for CloudChain RKSync
 
 ## WARNING: This is an incomplete work-in-progress
 

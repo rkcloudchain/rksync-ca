@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/rkcloudchain/courier-ca/api"
-	"github.com/rkcloudchain/courier-ca/config"
+	"github.com/rkcloudchain/rksync-ca/api"
+	"github.com/rkcloudchain/rksync-ca/config"
 )
 
 // GetKeyRequest constructs and returns api.BasicKeyRequest object based on the bccsp

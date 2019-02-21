@@ -9,16 +9,16 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/config"
-	"github.com/rkcloudchain/courier-ca/metadata"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/config"
+	"github.com/rkcloudchain/rksync-ca/metadata"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 const (
-	cmdName      = "courier-ca"
-	shortName    = "courier-ca server"
-	longName     = "CloucChain Courier Certificate Authority Server"
-	envVarPrefix = "COURIER_CA"
+	cmdName      = "rksync-ca"
+	shortName    = "rksync-ca server"
+	longName     = "CloucChain rksync Certificate Authority Server"
+	envVarPrefix = "RKSYNC_CA"
 )
 
 const (
@@ -261,7 +261,7 @@ func validateAndReturnAbsConf(configFilePath, homeDir, cmdName string) (string, 
 func defaultConfigFile() string {
 	fname := fmt.Sprintf("%s-config.yaml", cmdName)
 	home := "."
-	envs := []string{"COURIER_CA_SERVER_HOME", "COURIER_CA_HOME", "CA_CFG_PATH"}
+	envs := []string{"RKSYNC_CA_SERVER_HOME", "RKSYNC_CA_HOME", "CA_CFG_PATH"}
 	for _, env := range envs {
 		envVal := os.Getenv(env)
 		if envVal != "" {

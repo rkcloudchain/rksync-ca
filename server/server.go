@@ -18,10 +18,10 @@ import (
 	"github.com/cloudflare/cfssl/revoke"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/config"
-	caerrors "github.com/rkcloudchain/courier-ca/errors"
-	"github.com/rkcloudchain/courier-ca/metadata"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/config"
+	caerrors "github.com/rkcloudchain/rksync-ca/errors"
+	"github.com/rkcloudchain/rksync-ca/metadata"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 const (
@@ -34,7 +34,7 @@ type endpoint func(s *Server, resp http.ResponseWriter, rep *http.Request) (inte
 
 var endpoints map[string]endpoint
 
-// Server is the courier-ca server
+// Server is the rksync-ca server
 type Server struct {
 	// The home directory for the server
 	HomeDir string
@@ -50,7 +50,7 @@ type Server struct {
 	serverError error
 }
 
-// Init initializes a courier-ca server
+// Init initializes a rksync-ca server
 func (s *Server) Init(renew bool) (err error) {
 	err = s.init(renew)
 	err2 := s.CA.closeDB()
@@ -132,7 +132,7 @@ func (s *Server) makeFileNamesAbsolute() error {
 	return config.AbsTLSServer(&s.Config.TLS, s.HomeDir)
 }
 
-// Start the courier-ca server
+// Start the rksync-ca server
 func (s *Server) Start() (err error) {
 	log.Infof("Starting server in home directory: %s", s.HomeDir)
 

@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/rkcloudchain/courier-ca/api"
+import "github.com/rkcloudchain/rksync-ca/api"
 
 // UserInfo contains information about a user
 type UserInfo struct {
@@ -12,7 +12,7 @@ type UserInfo struct {
 	IncorrectPasswordAttempts int
 }
 
-// User is the user interface used by courier-ca server
+// User is the user interface used by rksync-ca server
 type User interface {
 	GetName() string
 	GetMaxEnrollments() int

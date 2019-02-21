@@ -7,10 +7,10 @@ import (
 
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/config"
-	"github.com/rkcloudchain/courier-ca/metadata"
-	"github.com/rkcloudchain/courier-ca/server"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/config"
+	"github.com/rkcloudchain/rksync-ca/metadata"
+	"github.com/rkcloudchain/rksync-ca/server"
+	"github.com/rkcloudchain/rksync-ca/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,7 +20,7 @@ const (
 )
 
 // ServerCmd encapsulates cobra command that provides command line interface
-// for the Courier CA server
+// for the rksync CA server
 type ServerCmd struct {
 	name          string
 	rootCmd       *cobra.Command
@@ -100,7 +100,7 @@ func (s *ServerCmd) init() {
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "Prints Courier CA Server version",
+		Short: "Prints rksync CA Server version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(metadata.GetVersionInfo(cmdName))
 		},

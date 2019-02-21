@@ -16,7 +16,7 @@ type Credential interface {
 	Val() (interface{}, error)
 	// Sets the credential value
 	SetVal(val interface{}) error
-	// Submits revoke request to the Courier CA server to revoke this credential
+	// Submits revoke request to the rksync CA server to revoke this credential
 	RevokeSelf() (*RevocationResponse, error)
 	// CreateToken returns authorization token for the specified request with
 	// specified body

@@ -10,7 +10,7 @@ import (
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
-	"github.com/rkcloudchain/courier-ca/util"
+	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 // DefaultCipherSuites is a set of strong TLS cipher suites
