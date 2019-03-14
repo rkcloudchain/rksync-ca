@@ -177,12 +177,12 @@ func (s *ServerCmd) configInit() (err error) {
 func (s *ServerCmd) createDefaultConfigFile() error {
 	dtype := s.v.GetString("dbtype")
 	if dtype == "" {
-		return errors.New("The '-dt' option is required (for example '-dt mysql')")
+		return errors.New("The '-t' option is required (for example '-t mysql')")
 	}
 
 	ds := s.v.GetString("datasource")
 	if ds == "" {
-		return errors.New("The '-ds datasource' option is required")
+		return errors.New("The '-s datasource' option is required")
 	}
 
 	cfg := strings.Replace(defaultCfgTemplate, "<<<VERSION>>>", metadata.Version, 1)

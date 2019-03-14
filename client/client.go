@@ -131,14 +131,14 @@ func (c *Client) Register(req *api.RegistrationRequest) (rr *api.RegistrationRes
 		return nil, err
 	}
 
-	var resp api.RegistrationResponseNet
+	var resp api.RegistrationResponse
 	err = c.SendReq(post, &resp)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debug("The register request completed successfully")
-	return &resp.RegistrationResponse, nil
+	return &resp, nil
 }
 
 // Enroll enrolls a new identity

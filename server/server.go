@@ -293,6 +293,7 @@ func (s *Server) closeListener() error {
 func (s *Server) registerHandlers() {
 	s.mux = mux.NewRouter()
 	s.registerHandler("enroll", enrollHandler, http.MethodPost)
+	s.registerHandler("register", registerHandler, http.MethodPost)
 }
 
 func (s *Server) registerHandler(path string, e endpoint, methods ...string) {

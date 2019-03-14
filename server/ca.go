@@ -614,7 +614,7 @@ func validateMatchingKeys(cert *x509.Certificate, keyFile string) error {
 		if privKey.PublicKey.N.Cmp(pubKey.(*rsa.PublicKey).N) != 0 {
 			return errors.New("Public key and private key do not match")
 		}
-	case *ecdsa.PrivateKey:
+	case *ecdsa.PublicKey:
 		privKey, err := util.GetECPrivateKey(keyPEM)
 		if err != nil {
 			return err
