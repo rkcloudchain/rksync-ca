@@ -12,14 +12,14 @@ type CSRInfo struct {
 	Names        []csr.Name       `json:"names,omitempty"`
 	Hosts        []string         `json:"hosts,omitempty"`
 	KeyRequest   *BasicKeyRequest `json:"key,omitempty"`
-	CA           *csr.CAConfig    `json:"ca,omitempty"`
+	CA           *csr.CAConfig    `json:"ca,omitempty" hide:"true"`
 	SerialNumber string           `json:"serial_number,omitempty"`
 }
 
 // BasicKeyRequest encapsulates size and algorithm for the key to be generated
 type BasicKeyRequest struct {
-	Algo string `json:"algo" yaml:"algo"`
-	Size int    `json:"size" yaml:"size"`
+	Algo string `json:"algo" yaml:"algo" help:"Specify key algorithm"`
+	Size int    `json:"size" yaml:"size" help:"Specify key size"`
 }
 
 // Attribute is a name and value pair

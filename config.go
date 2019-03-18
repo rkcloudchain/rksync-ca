@@ -69,6 +69,81 @@ ca:
   chainfile:
 
 #############################################################################
+#  Signing section
+#
+#  The "default" subsection is used to sign enrollment certificates;
+#  the default expiration ("expiry" field) is "8760h", which is 1 year in hours.
+#
+#  The "ca" profile subsection is used to sign intermediate CA certificates;
+#  the default expiration ("expiry" field) is "43800h" which is 5 years in hours.
+#  Note that "isca" is true, meaning that it issues a CA certificate.
+#  A maxpathlen of 0 means that the intermediate CA cannot issue other
+#  intermediate CA certificates, though it can still issue end entity certificates.
+#  (See RFC 5280, section 4.2.1.9)
+#
+#  The "tls" profile subsection is used to sign TLS certificate requests;
+#  the default expiration ("expiry" field) is "8760h", which is 1 year in hours.
+#############################################################################
+signing:
+  default:
+    usage:
+      - digital signature
+    expiry: 8760h
+  profiles:
+    ca:
+      usage:
+        - cert sign
+        - crl sign
+      expiry: 43800h
+      caconstraint:
+        isca: true
+        maxpathlen: 0
+    tls:
+      usage:
+        - signing
+        - key encipherment
+        - server auth
+        - client auth
+        - key agreement
+      expiry: 8760h
+
+###########################################################################
+#  Certificate Signing Request (CSR) section.
+#  This controls the creation of the root CA certificate.
+#  The expiration for the root CA certificate is configured with the
+#  "ca.expiry" field below, whose default value is "131400h" which is
+#  15 years in hours.
+#  The pathlength field is used to limit CA certificate hierarchy as described
+#  in section 4.2.1.9 of RFC 5280.
+#  Examples:
+#  1) No pathlength value means no limit is requested.
+#  2) pathlength == 1 means a limit of 1 is requested which is the default for
+#     a root CA.  This means the root CA can issue intermediate CA certificates,
+#     but these intermediate CAs may not in turn issue other CA certificates
+#     though they can still issue end entity certificates.
+#  3) pathlength == 0 means a limit of 0 is requested;
+#     this is the default for an intermediate CA, which means it can not issue
+#     CA certificates though it can still issue end entity certificates.
+###########################################################################
+csr:
+  cn: <<<COMMONNAME>>>
+  keyrequest:
+    algo: ecdsa
+    size: 256
+  names:
+    - C: CN
+      ST: "Sichuan"
+      L: "Chengdu"
+      O: "Rockontrol"
+      OU: "rksync-ca"
+  hosts:
+    - <<<MYHOST>>>
+    - localhost
+  ca:
+    expiry: 131400h
+    pathlength: <<<PATHLENGTH>>>
+
+#############################################################################
 #  The gencrl REST endpoint is used to generate a CRL that contains revoked
 #  certificates. This section contains configuration options that are used
 #  during gencrl request processing.
@@ -171,25 +246,52 @@ func (s *ServerCmd) configInit() (err error) {
 		return err
 	}
 
+	pl := "csr.ca.pathlength"
+	if s.v.IsSet(pl) && s.v.GetInt(pl) == 0 {
+		s.cfg.CACfg.CSR.CA.PathLenZero = true
+	}
+
+	pl = "signing.profiles.ca.caconstraint.maxpathlen"
+	if s.v.IsSet(pl) && s.v.GetInt(pl) == 0 {
+		s.cfg.CACfg.Signing.Profiles["ca"].CAConstraint.MaxPathLenZero = true
+	}
+
 	return nil
 }
 
 func (s *ServerCmd) createDefaultConfigFile() error {
-	dtype := s.v.GetString("dbtype")
+	dtype := s.v.GetString("db.type")
 	if dtype == "" {
-		return errors.New("The '-t' option is required (for example '-t mysql')")
+		return errors.New("The '--db.type' option is required (for example '-db.type mysql')")
 	}
 
-	ds := s.v.GetString("datasource")
+	ds := s.v.GetString("db.datasource")
 	if ds == "" {
-		return errors.New("The '-s datasource' option is required")
+		return errors.New("The '--db.datasource' option is required")
+	}
+
+	var myhost string
+	var err error
+	myhost, err = os.Hostname()
+	if err != nil {
+		return err
 	}
 
 	cfg := strings.Replace(defaultCfgTemplate, "<<<VERSION>>>", metadata.Version, 1)
 	cfg = strings.Replace(cfg, "<<<DATABASETYPE>>>", dtype, 1)
 	cfg = strings.Replace(cfg, "<<<DATASOURCE>>>", ds, 1)
+	cfg = strings.Replace(cfg, "<<<MYHOST>>>", myhost, 1)
+	purl := s.v.GetString("intermediate.parentserver.url")
+	if purl == "" {
+		cfg = strings.Replace(cfg, "<<<COMMONNAME>>>", "rksync-ca-server", 1)
+		cfg = strings.Replace(cfg, "<<<PATHLENGTH>>>", "1", 1)
+	} else {
+		cfg = strings.Replace(cfg, "<<<COMMONNAME>>>", "", 1)
+		cfg = strings.Replace(cfg, "<<<PATHLENGTH>>>", "0", 1)
+	}
+
 	cfgDir := filepath.Dir(s.cfgFileName)
-	err := os.MkdirAll(cfgDir, 0755)
+	err = os.MkdirAll(cfgDir, 0755)
 	if err != nil {
 		return err
 	}

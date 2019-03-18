@@ -120,10 +120,22 @@ func (s *ServerCmd) registerFlags() {
 	pflags.StringVarP(&s.cfgFileName, "config", "c", "", "Configuration file")
 	pflags.MarkHidden("config")
 	pflags.StringVarP(&s.homeDirectory, "home", "H", "", fmt.Sprintf("Server's home directory (default \"%s\")", filepath.Dir(cfg)))
-	util.FlagString(s.v, pflags, "dbtype", "t", "", "The database type is required to build default config file")
-	util.FlagString(s.v, pflags, "datasource", "s", "", "The database datasource is required to build default config file")
 
 	s.cfg = &config.ServerConfig{}
+	err := util.RegisterFlags(s.v, pflags, s.cfg, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	tags := map[string]string{
+		"help.csr.cn":           "The common name field of the certificate signing request to a parent rksync-ca-server",
+		"help.csr.serialnumber": "The serial number in a certificate signing request t oa parent rksync-ca-server",
+		"help.csr.hosts":        "A list of host names in a certificate signing request to a parent rksync-ca-server",
+	}
+	err = util.RegisterFlags(s.v, pflags, &s.cfg.CACfg, tags)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Configuration file is not required for some commands like version
