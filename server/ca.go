@@ -21,8 +21,8 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/cloudflare/cfssl/signer"
 	"github.com/cloudflare/cfssl/signer/local"
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/api"
 	"github.com/rkcloudchain/rksync-ca/api/registry"
 	"github.com/rkcloudchain/rksync-ca/attrmgr"
@@ -63,8 +63,8 @@ type CA struct {
 	enrollSigner signer.Signer
 	// The attribute manager
 	attrMgr *attrmgr.Mgr
-	// The crypto service provider (BCCSP)
-	csp bccsp.BCCSP
+	// The crypto service provider (CCCSP)
+	csp cccsp.CCCSP
 	// The database handle used to store certificate and optionally
 	// the user registry information
 	db *dbutil.DB
@@ -93,7 +93,7 @@ func (ca *CA) init(renew bool) (err error) {
 		return err
 	}
 
-	ca.csp, err = util.InitBCCSP(&ca.Config.CSP, "", ca.HomeDir)
+	ca.csp, err = util.InitCCCSP("csp", ca.HomeDir)
 	if err != nil {
 		return err
 	}
@@ -160,6 +160,9 @@ func (ca *CA) initConfig() (err error) {
 	if cs.Profiles == nil {
 		cs.Profiles = make(map[string]*cfcfg.SigningProfile)
 	}
+	if cfg.CSP == nil {
+		cfg.CSP = &config.CSP{SecLevel: 256}
+	}
 
 	caProfile := cs.Profiles["ca"]
 	initSigningProfile(&caProfile, defaultIntermediateCACertificateExpiration, true)
@@ -209,13 +212,12 @@ func (ca *CA) initKeyMaterial(renew bool) error {
 		}
 
 		if certFileExists {
-			_, _, _, err = util.GetSingerFromCertFile(certFile, ca.csp)
+			_, _, _, err = util.GetSignerFromCertFile(certFile, ca.csp)
 			if err != nil {
 				return errors.WithMessage(err, fmt.Sprintf("Failed to find private key for certificate in '%s'", certFile))
 			}
 
 			log.Info("The CA key and certificate already exists")
-			log.Infof("The key is stored by BCCSP provider '%s'", ca.Config.CSP.ProviderName)
 			log.Infof("The certificate is at: %s", certFile)
 
 			ca.Config.CSR.CN, err = ca.loadCNFromEnrollmentInfo(certFile)
@@ -237,7 +239,6 @@ func (ca *CA) initKeyMaterial(renew bool) error {
 		return errors.Wrap(err, "Failed to store certificate")
 	}
 	log.Infof("The CA key and certificate were generated for CA %s", ca.Config.CA.Name)
-	log.Infof("The key was stored by BCCSP provider '%s'", ca.Config.CSP.ProviderName)
 	log.Infof("The certificate is at: %s", certFile)
 
 	return nil
@@ -327,7 +328,7 @@ func (ca *CA) initEnrollmentSigner() (err error) {
 		}
 	}
 
-	ca.enrollSigner, err = util.BCCSPBackedSigner(c.CA.Certfile, c.CA.Keyfile, policy, ca.csp)
+	ca.enrollSigner, err = util.CCCSPBackedSigner(c.CA.Certfile, c.CA.Keyfile, policy, ca.csp)
 	if err != nil {
 		return err
 	}
@@ -346,7 +347,6 @@ func (ca *CA) getCACert() (cert []byte, err error) {
 		}
 		clientCfg.TLS = ca.Config.Intermediate.TLS
 		clientCfg.CAName = ca.Config.Intermediate.ParentServer.CAName
-		clientCfg.CSP = ca.Config.CSP
 		clientCfg.CSR = ca.Config.CSR
 		if ca.Config.CSR.CN != "" {
 			return nil, errors.Errorf("CN '%s' cannot be sepcified for an intermediate CA. Remove CN from CSR section for enrollment of intermediate CA to be successful", ca.Config.CSR.CN)
@@ -402,7 +402,7 @@ func (ca *CA) getCACert() (cert []byte, err error) {
 			SerialNumber: csr.SerialNumber,
 		}
 		log.Debugf("Root CA certificate request: %+v", req)
-		_, cspSigner, err := util.BCCSPKeyRequestGenerate(&req, ca.csp)
+		_, cspSigner, err := util.CCCSPKeyRequestGenerate(&req, ca.csp)
 		if err != nil {
 			return nil, err
 		}

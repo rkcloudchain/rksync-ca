@@ -4,14 +4,14 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/attrmgr"
 	"github.com/rkcloudchain/rksync-ca/util"
 )
 
 // NewSigner is constructor for Signer
-func NewSigner(key bccsp.Key, cert []byte) (*Signer, error) {
+func NewSigner(key cccsp.Key, cert []byte) (*Signer, error) {
 	s := &Signer{
 		key:       key,
 		certBytes: cert,
@@ -27,14 +27,14 @@ func NewSigner(key bccsp.Key, cert []byte) (*Signer, error) {
 
 // Signer represents a signer
 type Signer struct {
-	key       bccsp.Key
+	key       cccsp.Key
 	certBytes []byte
 	cert      *x509.Certificate
 	name      string
 }
 
 // Key returns the key bytes of this signer
-func (s *Signer) Key() bccsp.Key {
+func (s *Signer) Key() cccsp.Key {
 	return s.key
 }
 

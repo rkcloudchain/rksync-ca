@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/cloudflare/cfssl/log"
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/api/credential"
 	"github.com/rkcloudchain/rksync-ca/util"
 )
@@ -21,7 +21,7 @@ const (
 // Client represents a client that will load/store an credential
 type Client interface {
 	NewX509Identity(name string, creds []credential.Credential) Identity
-	GetCSP() bccsp.BCCSP
+	GetCSP() cccsp.CCCSP
 }
 
 // Identity represents an identity
@@ -84,12 +84,12 @@ func (cred *Credential) Load() error {
 		return err
 	}
 	csp := cred.getCSP()
-	key, _, _, err := util.GetSingerFromCertFile(cred.certFile, csp)
+	key, _, _, err := util.GetSignerFromCertFile(cred.certFile, csp)
 	if err != nil {
-		log.Debug("No key found in the BCCSP keystore, attempting fallback")
-		key, err = util.ImportBCCSPKeyFromPEM(cred.keyFile, csp, true)
+		log.Debug("No key found in the CCCSP keystore, attempting fallback")
+		key, err = util.ImportCCCSPKeyFromPEM(cred.keyFile, csp, true)
 		if err != nil {
-			return errors.WithMessage(err, fmt.Sprintf("Could not find the private key in the BCCSP keystore nor in the keyfile %s", cred.keyFile))
+			return errors.WithMessage(err, fmt.Sprintf("Could not find the private key in the CCCSP keystore nor in the keyfile %s", cred.keyFile))
 		}
 	}
 	cred.val, err = NewSigner(key, cert)
@@ -136,9 +136,10 @@ func (cred *Credential) CreateToken(req *http.Request, reqBody []byte) (string, 
 	return util.CreateToken(cred.getCSP(), cred.val.certBytes, cred.val.key, req.Method, req.URL.RequestURI(), reqBody)
 }
 
-func (cred *Credential) getCSP() bccsp.BCCSP {
+func (cred *Credential) getCSP() cccsp.CCCSP {
 	if cred.client != nil && cred.client.GetCSP() != nil {
 		return cred.client.GetCSP()
 	}
-	return util.GetDefaultBCCSP()
+
+	panic("CCCSP is nil, this is a development issue")
 }

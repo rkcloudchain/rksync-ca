@@ -4,7 +4,6 @@ import (
 	"time"
 
 	cfsslcfg "github.com/cloudflare/cfssl/config"
-	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/rksync-ca/api"
 	"github.com/spf13/viper"
@@ -72,9 +71,14 @@ type CAConfig struct {
 	Intermediate IntermediateCA
 	Registry     CAConfigRegistry
 	CRL          CRLConfig
-	CSP          *factory.FactoryOpts
 	Client       *ClientConfig
 	DB           CAConfigDB
+	CSP          *CSP
+}
+
+// CSP contains options for the cccsp
+type CSP struct {
+	SecLevel int
 }
 
 // CAConfigDB is the database part of the server's config

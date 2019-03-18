@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/cloudflare/cfssl/log"
-	"github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/util"
 )
 
@@ -48,11 +47,11 @@ func AbsTLSClient(cfg *ClientTLSConfig, configDir string) error {
 }
 
 // GetClientTLSConfig creates a tls.Config oject from certs and roots
-func GetClientTLSConfig(cfg *ClientTLSConfig, csp bccsp.BCCSP) (*tls.Config, error) {
+func GetClientTLSConfig(cfg *ClientTLSConfig, csp cccsp.CCCSP) (*tls.Config, error) {
 	var certs []tls.Certificate
 
 	if csp == nil {
-		csp = factory.GetDefault()
+		return nil, errors.New("CSP cannot be nil")
 	}
 
 	log.Debugf("CA Files: %+v", cfg.CertFiles)

@@ -19,8 +19,9 @@ import (
 	"time"
 
 	"github.com/cloudflare/cfssl/log"
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
+	"github.com/rkcloudchain/cccsp/hash"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -205,7 +206,7 @@ func GetSerialAsHex(serial *big.Int) string {
 }
 
 // CreateToken creates a JWT-like token.
-func CreateToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri string, body []byte) (string, error) {
+func CreateToken(csp cccsp.CCCSP, cert []byte, key cccsp.Key, method, uri string, body []byte) (string, error) {
 	x509Cert, err := GetX509CertificateFromPEM(cert)
 	if err != nil {
 		return "", err
@@ -225,7 +226,7 @@ func CreateToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri string
 }
 
 // GenECDSAToken signs the http body and cert with ECDSA using EC private key
-func GenECDSAToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri string, body []byte) (string, error) {
+func GenECDSAToken(csp cccsp.CCCSP, cert []byte, key cccsp.Key, method, uri string, body []byte) (string, error) {
 	b64body := base64.StdEncoding.EncodeToString(body)
 	b64cert := base64.StdEncoding.EncodeToString(cert)
 	b64uri := base64.StdEncoding.EncodeToString([]byte(uri))
@@ -234,18 +235,18 @@ func GenECDSAToken(csp bccsp.BCCSP, cert []byte, key bccsp.Key, method, uri stri
 	return genECDSAToken(csp, key, b64cert, payload)
 }
 
-func genECDSAToken(csp bccsp.BCCSP, key bccsp.Key, b64cert, payload string) (string, error) {
-	digest, digestError := csp.Hash([]byte(payload), &bccsp.SHAOpts{})
+func genECDSAToken(csp cccsp.CCCSP, key cccsp.Key, b64cert, payload string) (string, error) {
+	digest, digestError := csp.Hash([]byte(payload), string(hash.SHA3256))
 	if digestError != nil {
 		return "", errors.WithMessage(digestError, fmt.Sprintf("Hash failed on '%s'", payload))
 	}
 
 	ecSignature, err := csp.Sign(key, digest, nil)
 	if err != nil {
-		return "", errors.WithMessage(err, "BCCSP signature generation failure")
+		return "", errors.WithMessage(err, "CCCSP signature generation failure")
 	}
 	if len(ecSignature) == 0 {
-		return "", errors.New("BCCSP signature creation failed. Signature must be different than nil")
+		return "", errors.New("CCCSP signature creation failed. Signature must be different than nil")
 	}
 
 	b64sig := base64.StdEncoding.EncodeToString(ecSignature)

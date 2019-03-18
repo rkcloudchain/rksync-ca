@@ -17,9 +17,9 @@ import (
 	cfsslapi "github.com/cloudflare/cfssl/api"
 	"github.com/cloudflare/cfssl/csr"
 	"github.com/cloudflare/cfssl/log"
-	"github.com/hyperledger/fabric/bccsp"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/api"
 	"github.com/rkcloudchain/rksync-ca/api/credential"
 	x509cred "github.com/rkcloudchain/rksync-ca/api/credential/x509"
@@ -36,7 +36,7 @@ type Client struct {
 	// HTTP client associated with this rksync CA client
 	httpClient *http.Client
 
-	csp               bccsp.BCCSP
+	csp               cccsp.CCCSP
 	initialized       bool
 	keyFile, certFile string
 	caCertsDir        string
@@ -48,36 +48,36 @@ func (c *Client) Init() error {
 		cfg := c.Config
 		log.Debugf("Initializing client with config %+v", cfg)
 
-		if cfg.MSPDir == "" {
-			cfg.MSPDir = "msp"
+		if cfg.CSPDir == "" {
+			cfg.CSPDir = "csp"
 		}
-		mspDir, err := util.MakeFileAbs(cfg.MSPDir, c.HomeDir)
+		cspDir, err := util.MakeFileAbs(cfg.CSPDir, c.HomeDir)
 		if err != nil {
 			return err
 		}
-		cfg.MSPDir = mspDir
+		cfg.CSPDir = cspDir
 
-		keyDir := filepath.Join(mspDir, "keystore")
+		keyDir := filepath.Join(cspDir, "keystore")
 		err = os.MkdirAll(keyDir, 0700)
 		if err != nil {
 			return errors.Wrap(err, "Failed to create keystore directory")
 		}
 		c.keyFile = filepath.Join(keyDir, "key.pem")
 
-		certDir := filepath.Join(mspDir, "signcerts")
+		certDir := filepath.Join(cspDir, "signcerts")
 		err = os.MkdirAll(certDir, 0755)
 		if err != nil {
 			return errors.Wrap(err, "Failed to create signcerts directory")
 		}
 		c.certFile = filepath.Join(certDir, "cert.pem")
 
-		c.caCertsDir = filepath.Join(mspDir, "cacerts")
+		c.caCertsDir = filepath.Join(cspDir, "cacerts")
 		err = os.MkdirAll(c.caCertsDir, 0755)
 		if err != nil {
 			return errors.Wrap(err, "Failed to create cacerts directory")
 		}
 
-		c.csp, err = util.InitBCCSP(&cfg.CSP, mspDir, c.HomeDir)
+		c.csp, err = util.InitCCCSP(cspDir, c.HomeDir)
 		if err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func (c *Client) Enroll(req *api.EnrollmentRequest) (*api.EnrollmentResponse, er
 }
 
 // GenCSR generates a CSR (Certificate Signing Request)
-func (c *Client) GenCSR(req *api.CSRInfo, id string) ([]byte, bccsp.Key, error) {
+func (c *Client) GenCSR(req *api.CSRInfo, id string) ([]byte, cccsp.Key, error) {
 	log.Debugf("GenCSR %+v", req)
 
 	err := c.Init()
@@ -169,7 +169,7 @@ func (c *Client) GenCSR(req *api.CSRInfo, id string) ([]byte, bccsp.Key, error) 
 		cr.KeyRequest = newCfsslBasicKeyRequest(api.NewBasicKeyRequest())
 	}
 
-	key, cspSigner, err := util.BCCSPKeyRequestGenerate(cr, c.csp)
+	key, cspSigner, err := util.CCCSPKeyRequestGenerate(cr, c.csp)
 	if err != nil {
 		log.Debugf("failed generating BCCSP key: %s", err)
 		return nil, nil, err
@@ -221,7 +221,7 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*api.EnrollmentRe
 }
 
 // newEnrollmentResponse creates a client enrollment response from a network response
-func (c *Client) newEnrollmentResponse(result *api.EnrollmentResponseNet, id string, key bccsp.Key) (*api.EnrollmentResponse, error) {
+func (c *Client) newEnrollmentResponse(result *api.EnrollmentResponseNet, id string, key cccsp.Key) (*api.EnrollmentResponse, error) {
 	log.Debugf("newEnrollmentResponse %s", id)
 	certBytes, err := base64.StdEncoding.DecodeString(result.Cert)
 	if err != nil {
@@ -266,7 +266,7 @@ func (c *Client) NewX509Identity(name string, creds []credential.Credential) x50
 }
 
 // GetCSP returns BCCSP instance associated with this client
-func (c *Client) GetCSP() bccsp.BCCSP {
+func (c *Client) GetCSP() cccsp.CCCSP {
 	return c.csp
 }
 

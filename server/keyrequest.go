@@ -8,8 +8,8 @@ import (
 // GetKeyRequest constructs and returns api.BasicKeyRequest object based on the bccsp
 // configuration options
 func GetKeyRequest(cfg *config.CAConfig) *api.BasicKeyRequest {
-	if cfg.CSP.SwOpts != nil {
-		return &api.BasicKeyRequest{Algo: "ecdsa", Size: cfg.CSP.SwOpts.SecLevel}
+	if cfg.CSP != nil {
+		return &api.BasicKeyRequest{Algo: "ecdsa", Size: cfg.CSP.SecLevel}
 	}
 	return api.NewBasicKeyRequest()
 }
