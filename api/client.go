@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/cloudflare/cfssl/csr"
-	"github.com/rkcloudchain/rksync-ca/api/credential"
 	"github.com/rkcloudchain/rksync-ca/api/credential/x509"
 )
 
@@ -72,26 +71,6 @@ func NewBasicKeyRequest() *BasicKeyRequest {
 	return &BasicKeyRequest{Algo: bkr.A, Size: bkr.S}
 }
 
-// Identity is rksync-ca's implementation of an identity
-type Identity struct {
-	Name  string
-	Creds []credential.Credential
-}
-
-// GetECert returns the enrollment certificate signer for this identity
-func (i *Identity) GetECert() *x509.Signer {
-	for _, cred := range i.Creds {
-		if cred.Type() == x509.CredType {
-			v, _ := cred.Val()
-			if v != nil {
-				s, _ := v.(*x509.Signer)
-				return s
-			}
-		}
-	}
-	return nil
-}
-
 // GetCAInfoResponse is the response from the GetCAInfo call
 type GetCAInfoResponse struct {
 	// CAName is the name of the CA
@@ -104,7 +83,7 @@ type GetCAInfoResponse struct {
 
 // EnrollmentResponse is the response from Client.Enroll and Identity.Reenroll
 type EnrollmentResponse struct {
-	Identity *Identity
+	Identity x509.Identity
 	CAInfo   GetCAInfoResponse
 }
 

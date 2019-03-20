@@ -12,28 +12,42 @@ import (
 )
 
 // Identity is rksync-ca's implementation of an identity
-type Identity struct {
+type identity struct {
 	name   string
 	client *Client
 	creds  []credential.Credential
 }
 
 // NewIdentity is the constructor for identity
-func NewIdentity(client *Client, name string, creds []credential.Credential) *Identity {
-	id := new(Identity)
+func NewIdentity(client *Client, name string, creds []credential.Credential) x509cred.Identity {
+	id := new(identity)
 	id.name = name
 	id.client = client
 	id.creds = creds
 	return id
 }
 
+// GetECert returns the enrollment certificate signer for this identity
+func (i *identity) GetECert() *x509cred.Signer {
+	for _, cred := range i.creds {
+		if cred.Type() == x509cred.CredType {
+			v, _ := cred.Val()
+			if v != nil {
+				s, _ := v.(*x509cred.Signer)
+				return s
+			}
+		}
+	}
+	return nil
+}
+
 // GetName returns the identity name
-func (i *Identity) GetName() string {
+func (i *identity) GetName() string {
 	return i.name
 }
 
 // GetX509Credential returns X509 credential of this identity
-func (i *Identity) GetX509Credential() credential.Credential {
+func (i *identity) GetX509Credential() credential.Credential {
 	for _, cred := range i.creds {
 		if cred.Type() == x509cred.CredType {
 			return cred
@@ -42,8 +56,23 @@ func (i *Identity) GetX509Credential() credential.Credential {
 	return nil
 }
 
+// Store writes my identity info to dist
+func (i *identity) Store() error {
+	if i.client == nil {
+		return errors.New("An identity with no client my not be stored")
+	}
+
+	for _, cred := range i.creds {
+		err := cred.Store()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Revoke the identity associated with 'id'
-func (i *Identity) Revoke(req *credential.RevocationRequest) (*credential.RevocationResponse, error) {
+func (i *identity) Revoke(req *credential.RevocationRequest) (*credential.RevocationResponse, error) {
 	log.Debugf("Entering identity.Revoke %+v", req)
 	reqBody, err := util.Marshal(req, "RevocationRequest")
 	if err != nil {
@@ -63,7 +92,7 @@ func (i *Identity) Revoke(req *credential.RevocationRequest) (*credential.Revoca
 }
 
 // Post sends arbitrary request body to an endpoint.
-func (i *Identity) Post(endpoint string, reqBody []byte, result interface{}, queryParam map[string]string) error {
+func (i *identity) Post(endpoint string, reqBody []byte, result interface{}, queryParam map[string]string) error {
 	req, err := i.client.newPost(endpoint, reqBody)
 	if err != nil {
 		return err
@@ -80,7 +109,7 @@ func (i *Identity) Post(endpoint string, reqBody []byte, result interface{}, que
 	return i.client.SendReq(req, result)
 }
 
-func (i *Identity) addTokenAuthHdr(req *http.Request, body []byte) error {
+func (i *identity) addTokenAuthHdr(req *http.Request, body []byte) error {
 	log.Debug("Adding token-based authorization header")
 	var token string
 	var err error

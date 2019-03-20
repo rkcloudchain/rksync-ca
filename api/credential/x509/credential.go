@@ -26,6 +26,10 @@ type Client interface {
 
 // Identity represents an identity
 type Identity interface {
+	GetECert() *Signer
+	GetName() string
+	GetX509Credential() credential.Credential
+	Store() error
 	Revoke(req *credential.RevocationRequest) (*credential.RevocationResponse, error)
 }
 

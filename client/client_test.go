@@ -46,7 +46,7 @@ func TestEnroll(t *testing.T) {
 		},
 	}
 
-	resp, err := c.Enroll(&api.EnrollmentRequest{
+	_, err = c.Enroll(&api.EnrollmentRequest{
 		Name:   "xqlun7",
 		Secret: "OoQULAhRyUIt",
 		CSR: &api.CSRInfo{
@@ -57,5 +57,4 @@ func TestEnroll(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Len(t, resp.Identity.Creds, 1)
 }

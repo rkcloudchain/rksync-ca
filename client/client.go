@@ -239,7 +239,7 @@ func (c *Client) newEnrollmentResponse(result *api.EnrollmentResponseNet, id str
 	identity := NewIdentity(c, id, []credential.Credential{x509Cred})
 
 	resp := &api.EnrollmentResponse{
-		Identity: &api.Identity{Name: identity.GetName(), Creds: []credential.Credential{identity.GetX509Credential()}},
+		Identity: NewIdentity(c, identity.GetName(), []credential.Credential{identity.GetX509Credential()}),
 	}
 	err = c.net2LocalCAInfo(&result.ServerInfo, &resp.CAInfo)
 	if err != nil {
