@@ -114,7 +114,7 @@ func (s *ServerCmd) registerFlags() {
 	cfg := defaultConfigFile()
 
 	s.v.SetEnvPrefix(envVarPrefix)
-	s.v.SetEnvKeyReplacer(strings.NewReplacer(",", "_"))
+	s.v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	pflags := s.rootCmd.PersistentFlags()
 	pflags.StringVarP(&s.cfgFileName, "config", "c", "", "Configuration file")
