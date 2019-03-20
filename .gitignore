@@ -12,4 +12,5 @@
 *.out
 .vscode
 .idea
-rksync-ca
+bin
+build

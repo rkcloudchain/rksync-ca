@@ -355,7 +355,7 @@ func (ca *CA) getCACert() (cert []byte, err error) {
 			return nil, err
 		}
 
-		ca.Config.CSR.CN = resp.Identity.Name
+		ca.Config.CSR.CN = resp.Identity.GetName()
 		ecert := resp.Identity.GetECert()
 		if ecert == nil {
 			return nil, errors.New("No enrollment certificate returned by parent server")
