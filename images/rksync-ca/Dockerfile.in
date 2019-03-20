@@ -10,4 +10,5 @@ echo "deb-src http://mirrors.tencentyun.com/ubuntu/ xenial main restricted unive
 echo "deb-src http://mirrors.tencentyun.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list \
 echo "deb-src http://mirrors.tencentyun.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
 RUN apt-get update && apt-get upgrade -y && apt-get dist-upgrade -y
+RUN apt-get install -y netcat
 CMD rksync-ca start
