@@ -7,7 +7,6 @@ import (
 	"github.com/cloudflare/cfssl/log"
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/rksync-ca/api/credential"
-	x509cred "github.com/rkcloudchain/rksync-ca/api/credential/x509"
 	"github.com/rkcloudchain/rksync-ca/util"
 )
 
@@ -15,28 +14,24 @@ import (
 type identity struct {
 	name   string
 	client *Client
-	creds  []credential.Credential
+	cred   *credential.Credential
 }
 
 // NewIdentity is the constructor for identity
-func NewIdentity(client *Client, name string, creds []credential.Credential) x509cred.Identity {
+func NewIdentity(client *Client, name string, cred *credential.Credential) credential.Identity {
 	id := new(identity)
 	id.name = name
 	id.client = client
-	id.creds = creds
+	id.cred = cred
 	return id
 }
 
 // GetECert returns the enrollment certificate signer for this identity
-func (i *identity) GetECert() *x509cred.Signer {
-	for _, cred := range i.creds {
-		if cred.Type() == x509cred.CredType {
-			v, _ := cred.Val()
-			if v != nil {
-				s, _ := v.(*x509cred.Signer)
-				return s
-			}
-		}
+func (i *identity) GetECert() *credential.Signer {
+	v, _ := i.cred.Val()
+	if v != nil {
+		s, _ := v.(*credential.Signer)
+		return s
 	}
 	return nil
 }
@@ -47,13 +42,8 @@ func (i *identity) GetName() string {
 }
 
 // GetX509Credential returns X509 credential of this identity
-func (i *identity) GetX509Credential() credential.Credential {
-	for _, cred := range i.creds {
-		if cred.Type() == x509cred.CredType {
-			return cred
-		}
-	}
-	return nil
+func (i *identity) GetX509Credential() *credential.Credential {
+	return i.cred
 }
 
 // Store writes my identity info to dist
@@ -61,14 +51,7 @@ func (i *identity) Store() error {
 	if i.client == nil {
 		return errors.New("An identity with no client my not be stored")
 	}
-
-	for _, cred := range i.creds {
-		err := cred.Store()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return i.cred.Store()
 }
 
 // Revoke the identity associated with 'id'
@@ -113,12 +96,9 @@ func (i *identity) addTokenAuthHdr(req *http.Request, body []byte) error {
 	log.Debug("Adding token-based authorization header")
 	var token string
 	var err error
-	for _, cred := range i.creds {
-		token, err = cred.CreateToken(req, body)
-		if err != nil {
-			return errors.WithMessage(err, "Failed to add token authorization header")
-		}
-		break
+	token, err = i.cred.CreateToken(req, body)
+	if err != nil {
+		return errors.WithMessage(err, "Failed to add token authorization header")
 	}
 	req.Header.Set("Authorization", token)
 	return nil

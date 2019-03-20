@@ -24,7 +24,6 @@ import (
 	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/rksync-ca/api"
 	"github.com/rkcloudchain/rksync-ca/api/credential"
-	x509cred "github.com/rkcloudchain/rksync-ca/api/credential/x509"
 	"github.com/rkcloudchain/rksync-ca/config"
 	"github.com/rkcloudchain/rksync-ca/util"
 )
@@ -240,19 +239,19 @@ func (c *Client) newEnrollmentResponse(result *api.EnrollmentResponseNet, id str
 	if err != nil {
 		return nil, errors.WithMessage(err, "Invalid response format from server")
 	}
-	signer, err := x509cred.NewSigner(key, certBytes)
+	signer, err := credential.NewSigner(key, certBytes)
 	if err != nil {
 		return nil, err
 	}
-	x509Cred := x509cred.NewCredential(c.certFile, c.keyFile, c)
+	x509Cred := credential.NewCredential(c.certFile, c.keyFile, c)
 	err = x509Cred.SetVal(signer)
 	if err != nil {
 		return nil, err
 	}
-	identity := NewIdentity(c, id, []credential.Credential{x509Cred})
+	identity := NewIdentity(c, id, x509Cred)
 
 	resp := &api.EnrollmentResponse{
-		Identity: NewIdentity(c, identity.GetName(), []credential.Credential{identity.GetX509Credential()}),
+		Identity: NewIdentity(c, identity.GetName(), identity.GetX509Credential()),
 	}
 	err = c.net2LocalCAInfo(&result.ServerInfo, &resp.CAInfo)
 	if err != nil {
@@ -274,8 +273,8 @@ func (c *Client) net2LocalCAInfo(net *api.CAInfoResponseNet, local *api.GetCAInf
 }
 
 // NewX509Identity creates a new identity
-func (c *Client) NewX509Identity(name string, creds []credential.Credential) x509cred.Identity {
-	return NewIdentity(c, name, creds)
+func (c *Client) NewX509Identity(name string, cred *credential.Credential) credential.Identity {
+	return NewIdentity(c, name, cred)
 }
 
 // GetCSP returns BCCSP instance associated with this client

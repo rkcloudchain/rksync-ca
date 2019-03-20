@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/cloudflare/cfssl/csr"
-	"github.com/rkcloudchain/rksync-ca/api/credential/x509"
+	"github.com/rkcloudchain/rksync-ca/api/credential"
 )
 
 // CSRInfo is Certificate Signing Request (CSR) Information
@@ -83,7 +83,7 @@ type GetCAInfoResponse struct {
 
 // EnrollmentResponse is the response from Client.Enroll and Identity.Reenroll
 type EnrollmentResponse struct {
-	Identity x509.Identity
+	Identity credential.Identity
 	CAInfo   GetCAInfoResponse
 }
 

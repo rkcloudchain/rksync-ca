@@ -1,4 +1,4 @@
-package x509
+package credential
 
 import (
 	"crypto/x509"
