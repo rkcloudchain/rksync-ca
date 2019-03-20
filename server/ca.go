@@ -160,9 +160,6 @@ func (ca *CA) initConfig() (err error) {
 	if cs.Profiles == nil {
 		cs.Profiles = make(map[string]*cfcfg.SigningProfile)
 	}
-	if cfg.CSP == nil {
-		cfg.CSP = &config.CSP{SecLevel: 256}
-	}
 
 	caProfile := cs.Profiles["ca"]
 	initSigningProfile(&caProfile, defaultIntermediateCACertificateExpiration, true)
@@ -391,7 +388,7 @@ func (ca *CA) getCACert() (cert []byte, err error) {
 		}
 
 		if csr.KeyRequest == nil || (csr.KeyRequest.Algo == "" && csr.KeyRequest.Size == 0) {
-			csr.KeyRequest = GetKeyRequest(ca.Config)
+			csr.KeyRequest = api.NewBasicKeyRequest()
 		}
 		req := cfcsr.CertificateRequest{
 			CN:           csr.CN,

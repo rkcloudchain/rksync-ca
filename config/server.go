@@ -73,12 +73,6 @@ type CAConfig struct {
 	CRL          CRLConfig
 	Client       *ClientConfig `skip:"true"`
 	DB           CAConfigDB
-	CSP          *CSP `skip:"true"`
-}
-
-// CSP contains options for the cccsp
-type CSP struct {
-	SecLevel int
 }
 
 // CAConfigDB is the database part of the server's config
