@@ -2,8 +2,10 @@ package client
 
 import (
 	"bytes"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -217,7 +219,18 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*api.EnrollmentRe
 		return nil, err
 	}
 
-	return c.newEnrollmentResponse(&result, req.Name, key)
+	resp, err := c.newEnrollmentResponse(&result, req.Name, key)
+	if err != nil {
+		return nil, err
+	}
+
+	err = resp.Identity.Store()
+	if err != nil {
+		return nil, errors.WithMessage(err, "Failed to store enrollment information")
+	}
+
+	err = storeCAChain(c.Config, req.Profile, &resp.CAInfo)
+	return resp, err
 }
 
 // newEnrollmentResponse creates a client enrollment response from a network response
@@ -420,4 +433,94 @@ func NormalizeURL(addr string) (*url.URL, error) {
 		}
 	}
 	return u, nil
+}
+
+func storeCAChain(config *config.ClientConfig, profile string, si *api.GetCAInfoResponse) error {
+	serverURL, err := url.Parse(config.URL)
+	if err != nil {
+		return err
+	}
+	fname := serverURL.Host
+	if config.CAName != "" {
+		fname = fmt.Sprintf("%s-%s", fname, config.CAName)
+	}
+	fname = strings.Replace(fname, ":", "-", -1)
+	fname = strings.Replace(fname, ".", "-", -1) + ".pem"
+	tlsfname := fmt.Sprintf("tls-%s", fname)
+
+	rootCACertsDir := filepath.Join(config.CSPDir, "cacerts")
+	intCACertsDir := filepath.Join(config.CSPDir, "intermediatecerts")
+	tlsRootCACertsDir := filepath.Join(config.CSPDir, "tlscacerts")
+	tlsIntCACertsDir := filepath.Join(config.CSPDir, "tlsintermediatecerts")
+
+	var rootBlks [][]byte
+	var intBlks [][]byte
+	chain := si.CAChain
+	for len(chain) > 0 {
+		var block *pem.Block
+		block, chain = pem.Decode(chain)
+		if block == nil {
+			break
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return errors.Wrap(err, "Failed to parse certificate in the CA chain")
+		}
+		if !cert.IsCA {
+			return errors.New("A certificate in the CA chain is not a CA certificate")
+		}
+
+		if len(cert.AuthorityKeyId) == 0 || bytes.Equal(cert.AuthorityKeyId, cert.SubjectKeyId) {
+			rootBlks = append(rootBlks, pem.EncodeToMemory(block))
+		} else {
+			intBlks = append(intBlks, pem.EncodeToMemory(block))
+		}
+	}
+
+	certBytes := bytes.Join(rootBlks, []byte(""))
+	if len(certBytes) > 0 {
+		if profile == "tls" {
+			err = storeToFile("TLS root CA certificate", tlsRootCACertsDir, tlsfname, certBytes)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = storeToFile("root CA certificate", rootCACertsDir, fname, certBytes)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	certBytes = bytes.Join(intBlks, []byte(""))
+	if len(certBytes) > 0 {
+		if profile == "tls" {
+			err = storeToFile("TLS intermediate CA certificates", tlsIntCACertsDir, tlsfname, certBytes)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = storeToFile("intermediate CA certificates", intCACertsDir, tlsfname, certBytes)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func storeToFile(what, dir, fname string, contents []byte) error {
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to create directory for %s at '%s'", what, dir)
+	}
+	fpath := filepath.Join(dir, fname)
+	err = util.WriteFile(fpath, contents, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to store %s at '%s'", what, fpath)
+	}
+	log.Infof("Stored %s at %s", what, fpath)
+	return nil
 }
