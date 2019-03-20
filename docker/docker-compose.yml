@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpw
+    networks:
+      - rksyncca
+    
+  rksync-ca:
+    image: reg.querycap.com/cloudchain/rksync-ca:latest
+    container_name: rksync-ca
+    ports:
+      - 8054:8054
+    links:
+      - db
+    volumes:
+      - ./wait-for.sh:/etc/cloudchain/rksync-ca-server/wait-for.sh
+    environment:
+      - RKSYNC_CA_DB_TYPE=mysql
+      - RKSYNC_CA_DB_DATASOURCE=root:rootpw@tcp(db:3306)/rksync_ca?parseTime=true&tls=false
+    networks: 
+      - rksyncca
+    command: rksync-ca start
+    depends_on:
+      - db
+
+networks:
+  rksyncca:
+    driver: bridge
