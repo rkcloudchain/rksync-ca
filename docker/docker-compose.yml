@@ -23,7 +23,7 @@ services:
       - RKSYNC_CA_DB_DATASOURCE=root:rootpw@tcp(db:3306)/rksync_ca?parseTime=true&tls=false
     networks: 
       - rksyncca
-    command: rksync-ca start
+    command: sh -c '/etc/cloudchain/rksync-ca-server/wait-for.sh db:3306 -- rksync-ca start'
     depends_on:
       - db
 
