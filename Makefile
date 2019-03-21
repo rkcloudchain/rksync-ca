@@ -1,5 +1,5 @@
 PROJECT_NAME = rksync-ca
-BASE_VERSION = 1.0.0
+BASE_VERSION = 1.0.1
 
 ARCH=$(shell go env GOARCH)
 MARCH=$(shell go env GOOS)-$(shell go env GOARCH)
