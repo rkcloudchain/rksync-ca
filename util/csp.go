@@ -52,7 +52,7 @@ func ImportCCCSPKeyFromPEM(keyFile string, csp cccsp.CCCSP, temporary bool) (ccc
 		if err != nil {
 			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to convert ECDSA private key for '%s'", keyFile))
 		}
-		sk, err := csp.KeyImport(priv, string(importer.ECDSAPRIKEY), temporary)
+		sk, err := csp.KeyImport(priv, importer.ECDSAPRIKEY, temporary)
 		if err != nil {
 			return nil, errors.WithMessage(err, fmt.Sprintf("Failed to import ECDSA private key for '%s'", keyFile))
 		}
@@ -86,7 +86,7 @@ func GetSignerFromCert(cert *x509.Certificate, csp cccsp.CCCSP) (cccsp.Key, cryp
 		return nil, nil, errors.New("CSP was not initialized")
 	}
 
-	certPubK, err := csp.KeyImport(cert, string(importer.X509CERT), true)
+	certPubK, err := csp.KeyImport(cert, importer.X509CERT, true)
 	if err != nil {
 		return nil, nil, errors.WithMessage(err, "Failed to import certificate's public key")
 	}
@@ -184,7 +184,7 @@ func CCCSPKeyRequestGenerate(req *csr.CertificateRequest, csp cccsp.CCCSP) (cccs
 
 // getCCCSPKeyGenAlgo generates a key as specified in the request.
 // This supports ECDSA and RSA
-func getCCCSPKeyGenAlgo(kr csr.KeyRequest) (opts keygen.Algorithm, err error) {
+func getCCCSPKeyGenAlgo(kr csr.KeyRequest) (opts string, err error) {
 	if kr == nil {
 		return keygen.ECDSA256, nil
 	}

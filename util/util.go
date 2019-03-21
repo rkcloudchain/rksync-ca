@@ -234,7 +234,7 @@ func GenECDSAToken(csp cccsp.CCCSP, cert []byte, key cccsp.Key, method, uri stri
 }
 
 func genECDSAToken(csp cccsp.CCCSP, key cccsp.Key, b64cert, payload string) (string, error) {
-	digest, digestError := csp.Hash([]byte(payload), string(hash.SHA3256))
+	digest, digestError := csp.Hash([]byte(payload), hash.SHA3256)
 	if digestError != nil {
 		return "", errors.WithMessage(digestError, fmt.Sprintf("Hash failed on '%s'", payload))
 	}
