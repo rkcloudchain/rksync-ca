@@ -38,6 +38,7 @@ type Client struct {
 	httpClient *http.Client
 
 	csp               cccsp.CCCSP
+	cspDir            string
 	initialized       bool
 	keyFile, certFile string
 	caCertsDir        string
@@ -49,14 +50,11 @@ func (c *Client) Init() error {
 		cfg := c.Config
 		log.Debugf("Initializing client with config %+v", cfg)
 
-		if cfg.CSPDir == "" {
-			cfg.CSPDir = "csp"
-		}
-		cspDir, err := util.MakeFileAbs(cfg.CSPDir, c.HomeDir)
+		cspDir, err := util.MakeFileAbs("csp", c.HomeDir)
 		if err != nil {
 			return err
 		}
-		cfg.CSPDir = cspDir
+		c.cspDir = cspDir
 
 		keyDir := filepath.Join(cspDir, "keystore")
 		err = os.MkdirAll(keyDir, 0700)
@@ -228,7 +226,7 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*api.EnrollmentRe
 		return nil, errors.WithMessage(err, "Failed to store enrollment information")
 	}
 
-	err = storeCAChain(c.Config, req.Profile, &resp.CAInfo)
+	err = storeCAChain(c.Config, c.cspDir, req.Profile, &resp.CAInfo)
 	return resp, err
 }
 
@@ -434,7 +432,7 @@ func NormalizeURL(addr string) (*url.URL, error) {
 	return u, nil
 }
 
-func storeCAChain(config *config.ClientConfig, profile string, si *api.GetCAInfoResponse) error {
+func storeCAChain(config *config.ClientConfig, cspDir, profile string, si *api.GetCAInfoResponse) error {
 	serverURL, err := url.Parse(config.URL)
 	if err != nil {
 		return err
@@ -447,10 +445,10 @@ func storeCAChain(config *config.ClientConfig, profile string, si *api.GetCAInfo
 	fname = strings.Replace(fname, ".", "-", -1) + ".pem"
 	tlsfname := fmt.Sprintf("tls-%s", fname)
 
-	rootCACertsDir := filepath.Join(config.CSPDir, "cacerts")
-	intCACertsDir := filepath.Join(config.CSPDir, "intermediatecerts")
-	tlsRootCACertsDir := filepath.Join(config.CSPDir, "tlscacerts")
-	tlsIntCACertsDir := filepath.Join(config.CSPDir, "tlsintermediatecerts")
+	rootCACertsDir := filepath.Join(cspDir, "cacerts")
+	intCACertsDir := filepath.Join(cspDir, "intermediatecerts")
+	tlsRootCACertsDir := filepath.Join(cspDir, "tlscacerts")
+	tlsIntCACertsDir := filepath.Join(cspDir, "tlsintermediatecerts")
 
 	var rootBlks [][]byte
 	var intBlks [][]byte

@@ -7,7 +7,6 @@ import (
 // ClientConfig is the rksync-ca client's config
 type ClientConfig struct {
 	URL      string
-	CSPDir   string
 	TLS      ClientTLSConfig
 	Debug    bool
 	LogLevel string

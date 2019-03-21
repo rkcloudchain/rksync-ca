@@ -22,8 +22,7 @@ func TestRegister(t *testing.T) {
 	c := &Client{
 		HomeDir: home,
 		Config: &config.ClientConfig{
-			URL:    "http://172.16.100.22:8054",
-			CSPDir: "csp",
+			URL: "http://172.16.100.22:8054",
 		},
 	}
 	resp, err := c.Register(&api.RegistrationRequest{
@@ -43,8 +42,7 @@ func TestEnroll(t *testing.T) {
 	c := &Client{
 		HomeDir: home,
 		Config: &config.ClientConfig{
-			URL:    "http://172.16.100.22:8054",
-			CSPDir: "csp",
+			URL: "http://172.16.100.22:8054",
 		},
 	}
 
