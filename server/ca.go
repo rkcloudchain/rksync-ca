@@ -93,7 +93,11 @@ func (ca *CA) init(renew bool) (err error) {
 		return err
 	}
 
-	ca.csp, err = util.InitCCCSP("csp", ca.HomeDir)
+	keyStorePath, err := util.MakeFileAbs("csp/keystore", ca.HomeDir)
+	if err != nil {
+		return errors.Wrap(err, "Failed to make CCCSP file absolute")
+	}
+	ca.csp, err = util.InitCCCSP(keyStorePath)
 	if err != nil {
 		return err
 	}

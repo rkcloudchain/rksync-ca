@@ -78,7 +78,7 @@ func (c *Client) Init() error {
 			return errors.Wrap(err, "Failed to create cacerts directory")
 		}
 
-		c.csp, err = util.InitCCCSP(cspDir, c.HomeDir)
+		c.csp, err = util.InitCCCSP(keyDir)
 		if err != nil {
 			return err
 		}

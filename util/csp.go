@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/cloudflare/cfssl/config"
@@ -27,10 +28,9 @@ import (
 )
 
 // InitCCCSP initializes CCCSP
-func InitCCCSP(cspDir, homeDir string) (cccsp.CCCSP, error) {
-	path, err := MakeFileAbs(cspDir, homeDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to make CCCSP file absolute")
+func InitCCCSP(path string) (cccsp.CCCSP, error) {
+	if !filepath.IsAbs(path) {
+		return nil, errors.New("Must make CCCSP file absolute")
 	}
 
 	return provider.New(path)
