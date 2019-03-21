@@ -103,7 +103,7 @@ func GetSignerFromCert(cert *x509.Certificate, csp cccsp.CCCSP) (cccsp.Key, cryp
 
 	signer, err := provider.NewSigner(csp, privateKey)
 	if err != nil {
-		return nil, nil, errors.WithMessage(err, "Failed to load ski from cccsp")
+		return nil, nil, errors.WithMessage(err, "Failed to create signer from cccsp")
 	}
 	return privateKey, signer, nil
 }
