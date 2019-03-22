@@ -501,7 +501,7 @@ func storeCAChain(config *config.ClientConfig, cspDir, profile string, si *api.G
 				return err
 			}
 		} else {
-			err = storeToFile("intermediate CA certificates", intCACertsDir, tlsfname, certBytes)
+			err = storeToFile("intermediate CA certificates", intCACertsDir, fname, certBytes)
 			if err != nil {
 				return err
 			}

@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var secret string
-
 func TestRegister(t *testing.T) {
 	userHome, err := os.UserHomeDir()
 	require.NoError(t, err)
@@ -22,16 +20,37 @@ func TestRegister(t *testing.T) {
 	c := &Client{
 		HomeDir: home,
 		Config: &config.ClientConfig{
-			URL: "http://172.16.100.22:8054",
+			URL: "http://localhost:8054",
 		},
 	}
 	resp, err := c.Register(&api.RegistrationRequest{
-		Name: "xqlun",
+		Name:   "xqlun",
+		Secret: "xqlunpwd",
 	})
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.Secret)
-	secret = resp.Secret
+}
+
+func TestRegisterWithAttribute(t *testing.T) {
+	userHome, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	home := filepath.Join(userHome, ".rksync-ca-client")
+	c := &Client{
+		HomeDir: home,
+		Config:  &config.ClientConfig{URL: "http://localhost:8054"},
+	}
+	resp, err := c.Register(&api.RegistrationRequest{
+		Name:   "subca",
+		Secret: "subcapwd",
+		Attributes: []api.Attribute{
+			api.Attribute{Name: "cr.IntermediateCA", Value: "true", ECert: true},
+		},
+	})
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Secret)
 }
 
 func TestEnroll(t *testing.T) {
@@ -42,13 +61,13 @@ func TestEnroll(t *testing.T) {
 	c := &Client{
 		HomeDir: home,
 		Config: &config.ClientConfig{
-			URL: "http://172.16.100.22:8054",
+			URL: "http://localhost:8054",
 		},
 	}
 
 	_, err = c.Enroll(&api.EnrollmentRequest{
 		Name:   "xqlun",
-		Secret: secret,
+		Secret: "xqlunpwd",
 		CSR: &api.CSRInfo{
 			CN: "Rockontrol",
 			Names: []csr.Name{
