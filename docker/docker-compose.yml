@@ -8,6 +8,8 @@ services:
       - MYSQL_ROOT_PASSWORD=rootpw
     networks:
       - rksyncca
+    ports:
+      - 3306:3306
     
   rksync-ca:
     image: cloudchain/rksync-ca:latest
