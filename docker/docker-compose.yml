@@ -10,7 +10,7 @@ services:
       - rksyncca
     
   rksync-ca:
-    image: reg.querycap.com/cloudchain/rksync-ca:latest
+    image: cloudchain/rksync-ca:latest
     container_name: rksync-ca
     ports:
       - 8054:8054
