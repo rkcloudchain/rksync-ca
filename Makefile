@@ -1,15 +1,23 @@
 PROJECT_NAME = rksync-ca
 BASE_VERSION = 1.0.3
+IS_RELEASE = false
 
 ARCH=$(shell go env GOARCH)
 MARCH=$(shell go env GOOS)-$(shell go env GOARCH)
 RYSYNC_TAG ?= $(ARCH)-$(BASE_VERSION)
 PKGNAME = github.com/rkcloudchain/$(PROJECT_NAME)
 
-METADATA_VAR = Version=$(BASE_VERSION)
+ifneq ($(IS_RELEASE), true)
+EXTRA_VERSION ?= snapshot-$(shell git rev-parse --short HEAD)
+PROJECT_VERSION = $(BASE_VERSION)-$(EXTRA_VERSION)
+else
+PROJECT_VERSION = $(BASE_VERSION)
+endif
+
+METADATA_VAR = Version=$(PROJECT_VERSION)
 GO_SOURCE := $(shell find . -name '*.go')
 GO_LDFLAGS = $(patsubst %,-X $(PKGNAME)/metadata.%,$(METADATA_VAR))
-DOCKER_TAG = $(ARCH)-$(BASE_VERSION)
+DOCKER_TAG = $(ARCH)-$(PROJECT_VERSION)
 DOCKER_NS ?= cloudchain
 
 docker: $(patsubst %,build/image/%, $(PROJECT_NAME))
