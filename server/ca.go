@@ -462,7 +462,7 @@ func (ca *CA) enroll(cfg *config.ClientConfig, rawurl, home string) (*api.Enroll
 	req.CSR = &cfg.CSR
 	req.Profile = "ca"
 	client := &client.Client{HomeDir: home, Config: cfg}
-	return client.Enroll(req)
+	return client.Enroll(req, false)
 }
 
 // Load CN from existing enrollment information

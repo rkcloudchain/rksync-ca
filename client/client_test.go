@@ -55,6 +55,6 @@ func TestEnroll(t *testing.T) {
 				csr.Name{C: "CN", ST: "Sichuan", L: "Chengdu", O: "Dep"},
 			},
 		},
-	})
+	}, true)
 	assert.NoError(t, err)
 }

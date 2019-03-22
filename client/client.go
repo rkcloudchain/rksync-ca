@@ -141,7 +141,7 @@ func (c *Client) Register(req *api.RegistrationRequest) (rr *api.RegistrationRes
 }
 
 // Enroll enrolls a new identity
-func (c *Client) Enroll(req *api.EnrollmentRequest) (*api.EnrollmentResponse, error) {
+func (c *Client) Enroll(req *api.EnrollmentRequest, saveOnDisk bool) (*api.EnrollmentResponse, error) {
 	log.Debugf("Enrolling %+v", req)
 
 	err := c.Init()
@@ -149,7 +149,7 @@ func (c *Client) Enroll(req *api.EnrollmentRequest) (*api.EnrollmentResponse, er
 		return nil, err
 	}
 
-	return c.handleX509Enroll(req)
+	return c.handleX509Enroll(req, saveOnDisk)
 }
 
 // GenCSR generates a CSR (Certificate Signing Request)
@@ -183,7 +183,7 @@ func (c *Client) GenCSR(req *api.CSRInfo, id string) ([]byte, cccsp.Key, error) 
 	return csrPEM, key, nil
 }
 
-func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*api.EnrollmentResponse, error) {
+func (c *Client) handleX509Enroll(req *api.EnrollmentRequest, saveOnDisk bool) (*api.EnrollmentResponse, error) {
 	csrPEM, key, err := c.GenCSR(req.CSR, req.Name)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Failure generating CSR")
@@ -219,6 +219,9 @@ func (c *Client) handleX509Enroll(req *api.EnrollmentRequest) (*api.EnrollmentRe
 	resp, err := c.newEnrollmentResponse(&result, req.Name, key)
 	if err != nil {
 		return nil, err
+	}
+	if !saveOnDisk {
+		return resp, nil
 	}
 
 	err = resp.Identity.Store()
