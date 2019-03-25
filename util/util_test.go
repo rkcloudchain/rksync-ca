@@ -1,4 +1,4 @@
-package util
+package util_test
 
 import (
 	"crypto/ecdsa"
@@ -10,17 +10,18 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rkcloudchain/rksync-ca/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFileExists(t *testing.T) {
 	name := "../README.md"
-	exists := FileExists(name)
+	exists := util.FileExists(name)
 	assert.True(t, exists)
 
 	name = "file-not-exists"
-	exists = FileExists(name)
+	exists = util.FileExists(name)
 	assert.False(t, exists)
 }
 
@@ -29,7 +30,7 @@ func TestMakeFilesAbs(t *testing.T) {
 	file2 := "a/b"
 	file3 := "/a/b"
 	files := []*string{&file1, &file2, &file3}
-	err := MakeFileNamesAbsolute(files, "/tmp")
+	err := util.MakeFileNamesAbsolute(files, "/tmp")
 	require.NoError(t, err)
 
 	assert.Equal(t, "/tmp/a", file1)
@@ -45,7 +46,7 @@ func TestMakeFileAbs(t *testing.T) {
 }
 
 func testMakeFileAbs(t *testing.T, file, dir, expect string) {
-	path, err := MakeFileAbs(file, dir)
+	path, err := util.MakeFileAbs(file, dir)
 	assert.NoError(t, err)
 
 	if expect != "" {
@@ -77,12 +78,12 @@ sLJGcSFzmXHJlmULJ9Ne8//jZlTKnS8dsZvbQu4i27c=
 
 func TestGetX509CertificateFromPEM(t *testing.T) {
 	certBytes := []byte(cert)
-	certificate, err := GetX509CertificateFromPEM(certBytes)
+	certificate, err := util.GetX509CertificateFromPEM(certBytes)
 	require.NoError(t, err)
 	require.NotNil(t, certificate)
 
 	errCertBytes := []byte(errCert)
-	certificate, err = GetX509CertificateFromPEM(errCertBytes)
+	certificate, err = util.GetX509CertificateFromPEM(errCertBytes)
 	require.Error(t, err)
 	require.Nil(t, certificate)
 }
@@ -116,10 +117,10 @@ vxb0gUfiADp3eghIO5cwu9tbXdtx5XHAmVhPN7JdudVl+Ag6dtDmrkgi
 -----END RSA PRIVATE KEY-----`
 
 func TestGetRSAPrivateKey(t *testing.T) {
-	_, err := GetRSAPrivateKey([]byte("hello"))
+	_, err := util.GetRSAPrivateKey([]byte("hello"))
 	assert.Error(t, err)
 
-	_, err = GetRSAPrivateKey([]byte(rsaKey))
+	_, err = util.GetRSAPrivateKey([]byte(rsaKey))
 	assert.NoError(t, err)
 
 	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -128,10 +129,10 @@ func TestGetRSAPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	pemEncodedPK := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: encodedPK})
-	_, err = GetRSAPrivateKey(pemEncodedPK)
+	_, err = util.GetRSAPrivateKey(pemEncodedPK)
 	assert.NoError(t, err)
 
-	_, err = GetRSAPrivateKey(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("hello")}))
+	_, err = util.GetRSAPrivateKey(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("hello")}))
 	assert.Error(t, err)
 
 	ecdsaK, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -140,7 +141,7 @@ func TestGetRSAPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	pemEncodedPK = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: encodedPK})
-	_, err = GetRSAPrivateKey(pemEncodedPK)
+	_, err = util.GetRSAPrivateKey(pemEncodedPK)
 	assert.Error(t, err)
 }
 
@@ -151,10 +152,10 @@ LN8D+tO0y9gA+r/J4QekFQHWPTnebGekyw==
 -----END EC PRIVATE KEY-----`
 
 func TestGetECPrivateKey(t *testing.T) {
-	_, err := GetECPrivateKey([]byte("hello"))
+	_, err := util.GetECPrivateKey([]byte("hello"))
 	assert.Error(t, err)
 
-	_, err = GetECPrivateKey([]byte(ecKey))
+	_, err = util.GetECPrivateKey([]byte(ecKey))
 	assert.NoError(t, err)
 
 	ecdsaK, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -163,10 +164,10 @@ func TestGetECPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	pemEncodedPK := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: encodedPK})
-	_, err = GetECPrivateKey(pemEncodedPK)
+	_, err = util.GetECPrivateKey(pemEncodedPK)
 	assert.NoError(t, err)
 
-	_, err = GetECPrivateKey(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("hello")}))
+	_, err = util.GetECPrivateKey(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("hello")}))
 	assert.Error(t, err)
 
 	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -175,18 +176,18 @@ func TestGetECPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	pemEncodedPK = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: encodedPK})
-	_, err = GetECPrivateKey(pemEncodedPK)
+	_, err = util.GetECPrivateKey(pemEncodedPK)
 	assert.Error(t, err)
 }
 
 func TestGetEnrollmentIDFromPEM(t *testing.T) {
 	certBytes := []byte(cert)
-	_, err := GetEnrollmentIDFromPEM(certBytes)
+	_, err := util.GetEnrollmentIDFromPEM(certBytes)
 	assert.NoError(t, err)
 }
 
 func TestRandomString(t *testing.T) {
-	str := RandomString(10)
+	str := util.RandomString(10)
 	assert.NotEmpty(t, str)
 	assert.Len(t, str, 10)
 }

@@ -299,9 +299,7 @@ func (ca *CA) initDB() error {
 // Initialize the user registry interface
 func (ca *CA) initUserRegistry() {
 	log.Debug("Initializing identity registry")
-	dbAccessor := new(Accessor)
-	dbAccessor.SetDB(ca.db)
-	ca.registry = dbAccessor
+	ca.registry = NewDBAccessor(ca.db)
 	log.Debug("Initialized DB identity registry")
 }
 

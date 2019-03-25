@@ -1,0 +1,23 @@
+dist: xenial
+services:
+  - mysql
+
+language: go
+
+matrix:
+  include:
+    - go: 1.11.x
+    - go: 1.12.x
+
+branches:
+  only:
+    - master
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - ./go.test.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t 503c569f-f68c-4163-ba08-93cb73daafe8

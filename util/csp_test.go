@@ -1,4 +1,4 @@
-package util
+package util_test
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/cloudflare/cfssl/csr"
 	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/cccsp/provider"
+	"github.com/rkcloudchain/rksync-ca/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -61,7 +62,7 @@ func TestGetSignerFromCertFile(t *testing.T) {
 }
 
 func testGetSignerFromCertFile(t *testing.T, keyFile, certFile string, mustFail int) {
-	key, err := ImportCCCSPKeyFromPEM(keyFile, csp, false)
+	key, err := util.ImportCCCSPKeyFromPEM(keyFile, csp, false)
 	if mustFail == 1 {
 		require.Error(t, err)
 		return
@@ -70,7 +71,7 @@ func testGetSignerFromCertFile(t *testing.T, keyFile, certFile string, mustFail 
 	require.NoError(t, err)
 	require.NotNil(t, key)
 
-	key, signer, cert, err := GetSignerFromCertFile(certFile, csp)
+	key, signer, cert, err := util.GetSignerFromCertFile(certFile, csp)
 	if mustFail == 2 {
 		require.Error(t, err)
 	} else {
@@ -80,7 +81,7 @@ func testGetSignerFromCertFile(t *testing.T, keyFile, certFile string, mustFail 
 		require.NotNil(t, cert)
 	}
 
-	cer, err := LoadX509KeyPair(certFile, keyFile, csp)
+	cer, err := util.LoadX509KeyPair(certFile, keyFile, csp)
 	if mustFail == 2 {
 		require.Error(t, err)
 	} else {
@@ -110,7 +111,7 @@ func testKeyGenerate(t *testing.T, kr csr.KeyRequest, mustFail bool) {
 		KeyRequest: kr,
 	}
 
-	key, signer, err := CCCSPKeyRequestGenerate(&req, csp)
+	key, signer, err := util.CCCSPKeyRequestGenerate(&req, csp)
 	if mustFail {
 		require.Error(t, err)
 	} else {

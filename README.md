@@ -1,4 +1,6 @@
-# rksync-ca
+# CloudChain RKSync CA
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/rkcloudchain/rksync-ca)](https://goreportcard.com/report/github.com/rkcloudchain/rksync-ca)
 
 The CloudChain RKSync CA is a Certificate Authority(CA) for CloudChain RKSync
 
