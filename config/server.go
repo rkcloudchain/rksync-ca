@@ -77,7 +77,7 @@ type CAConfig struct {
 
 // CAConfigDB is the database part of the server's config
 type CAConfigDB struct {
-	Type       string `def:"mysql" help:"Type of database"`
+	Type       string `def:"mariadb" help:"Type of database"`
 	Datasource string `help:"Data source which is database specific"`
 }
 

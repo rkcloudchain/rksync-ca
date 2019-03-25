@@ -201,7 +201,7 @@ registry:
 
 #############################################################################
 #  Database section
-#  Supported types are: "postgres", and "mysql".
+#  Supported types are: "postgres", and "mariadb".
 #  The datasource value depends on the type.
 #############################################################################
 db:
@@ -262,7 +262,7 @@ func (s *ServerCmd) configInit() (err error) {
 func (s *ServerCmd) createDefaultConfigFile() error {
 	dtype := s.v.GetString("db.type")
 	if dtype == "" {
-		return errors.New("The '--db.type' option is required (for example '-db.type mysql')")
+		return errors.New("The '--db.type' option is required (for example '-db.type mariadb')")
 	}
 
 	ds := s.v.GetString("db.datasource")

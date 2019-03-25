@@ -276,13 +276,13 @@ func (ca *CA) initDB() error {
 		if err != nil {
 			return errors.WithMessage(err, "Failed to create user registry for PostgresSQL")
 		}
-	case "mysql":
+	case "mariadb":
 		ca.db, err = dbutil.NewUserRegistryMySQL(db.Datasource)
 		if err != nil {
 			return errors.WithMessage(err, "Failed to create user registry for MySQL")
 		}
 	default:
-		return errors.Errorf("Invalid db.Type in config file: '%s', must be 'postgres' or 'mysql'", db.Type)
+		return errors.Errorf("Invalid db.Type in config file: '%s', must be 'postgres' or 'mariadb'", db.Type)
 	}
 
 	ca.certDBAccessor = NewCertDBAccessor(ca.db)
