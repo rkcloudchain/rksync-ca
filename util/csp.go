@@ -30,7 +30,11 @@ import (
 // InitCCCSP initializes CCCSP
 func InitCCCSP(path string) (cccsp.CCCSP, error) {
 	if !filepath.IsAbs(path) {
-		return nil, errors.New("Must make CCCSP file absolute")
+		var err error
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return provider.New(path)

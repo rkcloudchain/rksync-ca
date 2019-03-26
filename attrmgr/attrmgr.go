@@ -10,6 +10,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Attribute names
+const (
+	EnrollmentID = "cr.EnrollmentID"
+)
+
 var (
 	// AttrOID is the ASN.1 object identifier for an attribute extension in an
 	// X509 certificate
