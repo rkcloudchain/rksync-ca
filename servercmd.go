@@ -24,6 +24,7 @@ const (
 type ServerCmd struct {
 	name          string
 	rootCmd       *cobra.Command
+	blockingStart bool
 	v             *viper.Viper
 	cfgFileName   string
 	homeDirectory string
@@ -31,10 +32,11 @@ type ServerCmd struct {
 }
 
 // NewCommand returns new ServerCmd ready for running
-func NewCommand(name string) *ServerCmd {
+func NewCommand(name string, blockingStart bool) *ServerCmd {
 	s := &ServerCmd{
-		name: name,
-		v:    viper.New(),
+		name:          name,
+		blockingStart: blockingStart,
+		v:             viper.New(),
 	}
 	s.init()
 	return s
@@ -146,8 +148,9 @@ func (s *ServerCmd) configRequired() bool {
 // getServer returns a server.Server for the init and start commands
 func (s *ServerCmd) getServer() *server.Server {
 	return &server.Server{
-		HomeDir: s.homeDirectory,
-		Config:  s.cfg,
+		HomeDir:       s.homeDirectory,
+		Config:        s.cfg,
+		BlockingStart: s.blockingStart,
 		CA: server.CA{
 			Config: &s.cfg.CACfg,
 		},

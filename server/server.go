@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cloudflare/cfssl/api"
 	"github.com/cloudflare/cfssl/log"
@@ -38,6 +39,8 @@ var endpoints map[string]endpoint
 type Server struct {
 	// The home directory for the server
 	HomeDir string
+	// BlockingStart if true makes the Start function blocking
+	BlockingStart bool
 	// The server's configuration
 	Config *config.ServerConfig
 	// The server mux
@@ -48,6 +51,8 @@ type Server struct {
 	CA
 	// An error which occurs when serving
 	serverError error
+	// channel for communication between http.serve and main goroutine
+	done chan struct{}
 }
 
 // Init initializes a rksync-ca server
@@ -170,9 +175,25 @@ func (s *Server) Stop() error {
 	if err != nil {
 		return err
 	}
+	if s.done == nil {
+		return nil
+	}
+
+ForEnd:
+	for {
+		select {
+		case <-s.done:
+			log.Debugf("Stop: successful stop on port %d", s.Config.Port)
+			close(s.done)
+			s.done = nil
+			return nil
+		case <-time.After(10 * time.Second):
+			log.Debugf("Stop: waiting for listener on port %d to stop timeout", s.Config.Port)
+			break ForEnd
+		}
+	}
 
 	log.Debugf("Stop: successful stop on port %d", s.Config.Port)
-
 	err = s.CA.closeDB()
 	if err != nil {
 		log.Errorf("Close DB failed: %s", err)
@@ -252,7 +273,14 @@ func (s *Server) listenAndServe() (err error) {
 	}
 	s.listener = listener
 	log.Infof("Listening on %s", addrStr)
-	return s.serve()
+
+	if s.BlockingStart {
+		return s.serve()
+	}
+
+	s.done = make(chan struct{})
+	go s.serve()
+	return nil
 }
 
 func (s *Server) serve() error {
@@ -266,6 +294,9 @@ func (s *Server) serve() error {
 	err := s.CA.closeDB()
 	if err != nil {
 		log.Errorf("Close DB failed: %s", err)
+	}
+	if s.done != nil {
+		s.done <- struct{}{}
 	}
 	return s.serverError
 }

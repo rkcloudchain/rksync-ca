@@ -16,7 +16,7 @@ func runMain(args []string) error {
 	if len(args) > 1 {
 		cmdName = args[1]
 	}
-	scmd := NewCommand(cmdName)
+	scmd := NewCommand(cmdName, true)
 
 	err := scmd.Execute()
 	os.Args = saveOsArgs
