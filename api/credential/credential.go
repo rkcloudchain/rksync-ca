@@ -1,7 +1,6 @@
 package credential
 
 import (
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +23,6 @@ type Identity interface {
 	GetName() string
 	GetX509Credential() *Credential
 	Store() error
-	Revoke(req *RevocationRequest) (*RevocationResponse, error)
 }
 
 // NewCredential is constructor for X509 Credential
@@ -106,24 +104,6 @@ func (cred *Credential) Store() error {
 	return nil
 }
 
-// RevokeSelf revokes this X509 credential
-func (cred *Credential) RevokeSelf() (*RevocationResponse, error) {
-	name, err := cred.EnrollmentID()
-	if err != nil {
-		return nil, err
-	}
-	val := cred.val
-	serial := util.GetSerialAsHex(val.cert.SerialNumber)
-	aki := hex.EncodeToString(val.cert.AuthorityKeyId)
-	req := &RevocationRequest{
-		Serial: serial,
-		AKI:    aki,
-	}
-
-	id := cred.client.NewX509Identity(name, cred)
-	return id.Revoke(req)
-}
-
 // CreateToken creates token based on this X509 credential
 func (cred *Credential) CreateToken(req *http.Request, reqBody []byte) (string, error) {
 	return util.CreateToken(cred.getCSP(), cred.val.certBytes, cred.val.key, req.Method, req.URL.RequestURI(), reqBody)
@@ -135,30 +115,4 @@ func (cred *Credential) getCSP() cccsp.CCCSP {
 	}
 
 	panic("CCCSP is nil, this is a development issue")
-}
-
-// RevocationRequest is a revocation request for a single certificate or all certificates
-// associated with an identity
-type RevocationRequest struct {
-	Name   string `json:"id,omitempty"`
-	Serial string `json:"serial,omitempty"`
-	AKI    string `json:"aki,omitempty"`
-	Reason string `json:"reason,omitempty"`
-	CAName string `json:"caname,omitempty"`
-	GenCRL bool   `json:"gencrl,omitempty"`
-}
-
-// RevocationResponse represents response from the server for a revocation request
-type RevocationResponse struct {
-	RevokedCerts []RevokedCert
-	// CRL is PEM-encoded certificate revocation list (CRL) that contains all unexpired revoked certificates
-	CRL []byte
-}
-
-// RevokedCert represents a revoked certificate
-type RevokedCert struct {
-	// Serial number of the revoked certificate
-	Serial string
-	// AKI of the revoked certificate
-	AKI string
 }
