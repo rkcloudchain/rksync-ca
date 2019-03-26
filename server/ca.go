@@ -35,7 +35,8 @@ import (
 )
 
 const (
-	certificateError = "Invalid certificate in file"
+	defaultDatabaseType = "mariadb"
+	certificateError    = "Invalid certificate in file"
 
 	// CAChainParentFirstEnvVar is the name of the environment variable that needs to be set
 	// for server to return CA chain in parent-first order
@@ -263,8 +264,11 @@ func (ca *CA) initDB() error {
 	db := &ca.Config.DB
 	var err error
 
-	if db.Type == "" || db.Datasource == "" {
-		return errors.New("CA database configuration is not specified")
+	if db.Type == "" || db.Type == defaultDatabaseType {
+		db.Type = defaultDatabaseType
+		if db.Datasource == "" {
+			db.Datasource = "root:@tcp(localhost:3306)/rksync_ca?parseTime=true&charset=utf8"
+		}
 	}
 
 	ds := dbutil.MakeDBCred(db.Datasource)
