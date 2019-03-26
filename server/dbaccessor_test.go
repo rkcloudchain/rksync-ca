@@ -29,8 +29,9 @@ func testInsertAndGetUser(t *testing.T, accessor *Accessor) {
 	t.Log("TestInsertAndGetUser")
 
 	insert := &registry.UserInfo{
-		Name: "testuser",
-		Pass: "123456",
+		Name:           "testuser",
+		Pass:           "123456",
+		MaxEnrollments: 10,
 		Attributes: []api.Attribute{
 			api.Attribute{
 				Name:  "cr.EnrollmentID",
@@ -59,9 +60,10 @@ func testDeleteUser(t *testing.T, accessor *Accessor) {
 	t.Log("TestDeleteUser")
 
 	insert := &registry.UserInfo{
-		Name:       "deleteuser",
-		Pass:       "123456",
-		Attributes: []api.Attribute{},
+		Name:           "deleteuser",
+		Pass:           "123456",
+		MaxEnrollments: 10,
+		Attributes:     []api.Attribute{},
 	}
 
 	err := accessor.InsertUser(insert)
@@ -78,9 +80,10 @@ func testUpdateUser(t *testing.T, accessor *Accessor) {
 	t.Log("TestUpdateUser")
 
 	insert := &registry.UserInfo{
-		Name:       "updateuser",
-		Pass:       "123456",
-		Attributes: []api.Attribute{},
+		Name:           "updateuser",
+		Pass:           "123456",
+		MaxEnrollments: 10,
+		Attributes:     []api.Attribute{},
 	}
 
 	err := accessor.InsertUser(insert)
