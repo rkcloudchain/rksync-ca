@@ -37,7 +37,12 @@ func InitCCCSP(path string) (cccsp.CCCSP, error) {
 		}
 	}
 
-	return provider.New(path)
+	ks, err := provider.NewFileKEyStore(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return provider.New(ks), nil
 }
 
 // ImportCCCSPKeyFromPEM attempts to create a private CCCSP key from a pem file keyFile

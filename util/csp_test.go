@@ -25,11 +25,7 @@ func TestMain(m *testing.M) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	csp, err = provider.New(tempDir)
-	if err != nil {
-		fmt.Printf("Failed to create cccsp: %s\n\n", err)
-		os.Exit(-1)
-	}
+	csp = provider.New(provider.NewMemoryKeyStore())
 
 	ret := m.Run()
 	os.Exit(ret)
