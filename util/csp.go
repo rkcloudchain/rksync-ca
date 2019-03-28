@@ -37,7 +37,7 @@ func InitCCCSP(path string) (cccsp.CCCSP, error) {
 		}
 	}
 
-	ks, err := provider.NewFileKEyStore(path)
+	ks, err := provider.NewFileKeyStore(path)
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	fks, err := provider.NewFileKEyStore(tempDir)
+	fks, err := provider.NewFileKeyStore(tempDir)
 	if err != nil {
 		fmt.Printf("Failed to create file keystore: %s\n\n", err)
 		os.Exit(-1)
